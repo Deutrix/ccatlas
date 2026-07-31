@@ -1,0 +1,37 @@
+{
+  "__fixture": "THE MISSING EXEMPLAR — a plugin-provided slash command, recorded. Closes PRD open question 3a.",
+  "__source": "live capture, ccatlas session, Claude Code 2.1.220, 2026-07-31",
+  "__why_this_matters": [
+    "T0.3 scanned 384 transcripts / 276,870 records and found ZERO plugin or personal command invocations, despite ~60 being installed. It could not distinguish 'never invoked here' from 'not recorded at all', and correctly marked the command signal UNVERIFIABLE rather than guessing.",
+    "Under the pessimistic reading, `usage --unused` would have reported every command at zero and recommended pruning the user's entire command library.",
+    "`/plan` is provided by the everything-claude-code plugin. It IS recorded, in the same `<command-name>` carrier as CLI built-ins. Reading (a) confirmed: plugin commands are recorded; T0.3's corpus simply never contained one.",
+    "CONSEQUENCE: `kind: command` is buildable. T4.11 `usage commands` is deliverable and commands can re-enter the T4.12 prune ranking."
+  ],
+  "__remaining_limit": [
+    "The recorded name is bare — `/plan`, with no plugin namespace. Both a personal `plan` command and `everything-claude-code:plan` exist on this machine, and the transcript does not say which fired.",
+    "So OWNER attribution for commands has the same shape as T0.3 section 3.1's bare-skill-name problem: resolve against the inventory, never infer from the string.",
+    "Not yet observed: a command whose name collides across two plugins. Owner resolution in that case is undetermined."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000200",
+    "isSidechain": false,
+    "promptId": "<PROMPT-ID>",
+    "type": "user",
+    "message": {
+      "role": "user",
+      "content": "<command-message>plan</command-message>\n<command-name>/plan</command-name>  <CONTENT-TRUNCATED full_length=74>"
+    },
+    "uuid": "00000000-0000-4000-8000-000000000201",
+    "timestamp": "2026-07-31T13:34:10.146Z",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT>",
+    "sessionId": "00000000-0000-4000-8000-000000000202",
+    "version": "2.1.220",
+    "gitBranch": "<BRANCH>"
+  },
+  "__same_session_context": {
+    "command_name_records": { "/clear": 9, "/plan": 1, "/model": 1 },
+    "__note": "/clear and /model are CLI built-ins and must be filtered out as non-entities: not installed, not prunable, no passive cost. /plan is the ccatlas-relevant case."
+  }
+}
