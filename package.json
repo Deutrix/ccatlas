@@ -1,0 +1,40 @@
+{
+  "name": "ccatlas",
+  "version": "0.0.0",
+  "description": "Inventory, freshness, usage ROI, and portability for your Claude Code stack",
+  "license": "MIT",
+  "author": "Deutrix",
+  "type": "module",
+  "bin": {
+    "ccatlas": "bin/ccatlas"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": "^22.13.0 || >=24.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "prepack": "node scripts/build.mjs",
+    "pretest": "npm run build",
+    "test": "node --test \"tests/**/*.test.mjs\""
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "claude-code",
+    "inventory",
+    "plugins",
+    "mcp",
+    "skills",
+    "audit"
+  ]
+}

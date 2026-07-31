@@ -4,9 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-**Design-stage only. There is no source code yet** — the repo is `docs/` and nothing else. Phase 0 (discovery) has not started, and its blockers (`T0.1`–`T0.4`) are unanswered, which means **every CLI JSON shape described in the docs is an assumption, not an observed fact**. Do not write parsers against those shapes until a fixture corpus exists and `docs/FORMATS.md` has been written (`T0.6`).
+**Phase 0. The scaffold exists; no feature does.** `T0.8` has landed — TypeScript → esbuild → single ESM file at `bin/ccatlas`, `node:test`, 3-platform CI — and `src/` implements only `--version`, `--json`, `--help`. Discovery (`T0.1`–`T0.5`) is in flight, and its blockers `T0.1`–`T0.4` are **unanswered**, which means **every CLI JSON shape and transcript record shape described in the docs is an assumption, not an observed fact**.
 
-Read in this order: `docs/01-prd.md` (what and why) → `docs/02-architecture.md` (how, plus every hard constraint) → `docs/03-diagrams.md` (the same as mermaid) → `docs/04-tasks.md` (the work, with stable IDs).
+Do not write a parser against any of those shapes until the fixture corpus under `fixtures/` is complete and `FORMATS.md` has been written (`T0.6`). This is the single most likely way to waste a week here.
+
+Read in this order: `docs/01-prd.md` (what and why) → `docs/02-architecture.md` (how, plus every hard constraint) → `docs/03-diagrams.md` (the same as mermaid) → `docs/tasks.md` (the work).
+
+**Two task files exist; they are not interchangeable.** `docs/04-tasks.md` is the frozen design-stage breakdown — the origin of the stable task IDs, cited in commits, not edited. `docs/tasks.md` is the **execution ledger** derived from it: the same IDs plus dependencies, wave grouping, parallel-safety, per-task acceptance gates, and a measured baseline of the local machine against the reference scale the perf gates assume. Work from `docs/tasks.md`; cite IDs that trace back to `04-tasks.md`.
 
 ## What ccatlas is
 
@@ -14,7 +18,7 @@ A local-first CLI + Claude Code plugin that inventories, audits, and makes porta
 
 Ships two ways from one artefact: npm package `ccatlas` (standalone) and plugin `ccatlas@deutrix` whose marketplace entry uses `source: npm`.
 
-## Planned toolchain (not yet scaffolded — `T0.8`)
+## Toolchain (scaffolded — `T0.8`)
 
 | Concern | Choice |
 |---|---|

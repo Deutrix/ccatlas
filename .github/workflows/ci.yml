@@ -1,0 +1,131 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 3-platform matrix is a hard requirement from Phase 1 onward
+  # (docs/tasks.md "Global Constraints"). No POSIX path assumptions anywhere.
+  build:
+    name: ${{ matrix.os }} / node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Both ends of the engines range in package.json ("^22.13.0 || >=24.0.0").
+        # 22.13 is the first release where node:sqlite is available unflagged,
+        # which T4.2 depends on.
+        node: ['22.13', '24']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Requires package-lock.json to be committed.
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      # Invoked via `node` rather than by name: Windows does not honour shebangs.
+      - name: Smoke test the emitted binary
+        run: |
+          node bin/ccatlas --version
+          node bin/ccatlas --json
+
+      - name: Test
+        run: npm test
+
+      # Proves the engines floor rather than trusting release notes: node:sqlite
+      # must import without --experimental-sqlite on every matrix leg, because
+      # T4.2 depends on it. Nothing in src/ imports it yet — this is a check on
+      # the declared floor, not a feature.
+      - name: Verify node:sqlite is available unflagged
+        run: node --input-type=module -e "await import('node:sqlite'); console.log('node:sqlite OK unflagged')"
+
+  # Both gates below are required by docs/tasks.md "Global Constraints" and
+  # docs/02-architecture.md §11. Neither can pass yet:
+  #   - there is no .claude-plugin/plugin.json (that is T7.1)
+  #   - ccatlas is not published, so `plugin details` has nothing to measure
+  # They are wired now, non-blocking, so the wiring is reviewed and correct
+  # before it starts gating.
+  #
+  # TODO(T7.1): remove `continue-on-error` from the `validate` step once
+  #             .claude-plugin/plugin.json exists.
+  # TODO(T7.6): remove `continue-on-error` from the `details` step and make the
+  #             600-token check fail the build, once ccatlas is installable.
+  plugin-gates:
+    name: Claude Code plugin gates (non-blocking until Phase 7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The `claude` CLI is not preinstalled on GitHub runners.
+      - name: Install Claude Code CLI
+        id: install-claude
+        continue-on-error: true
+        run: npm i -g @anthropic-ai/claude-code
+
+      - name: Check the CLI is available
+        id: probe
+        run: |
+          if command -v claude >/dev/null 2>&1; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            claude --version
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "SKIPPED: claude CLI not on runner — plugin gates did not execute."
+          fi
+
+      # Gate 1 — manifest, frontmatter and hook validation.
+      - name: claude plugin validate . --strict
+        if: steps.probe.outputs.available == 'true'
+        continue-on-error: true # TODO(T7.1): make blocking
+        run: claude plugin validate . --strict
+
+      # Gate 2 — context budget. 600 always-on tokens is a hard acceptance
+      # number (docs/tasks.md, T7.6 📏), not a guideline.
+      #
+      # The output format of `plugin details` is still unknown — T0.2 is
+      # discovering whether it is machine-readable or text-only. Until that
+      # verdict lands, this step echoes the raw output and does not attempt to
+      # extract a number: writing a parser against an unobserved shape is
+      # explicitly forbidden by CLAUDE.md.
+      #
+      # TODO(T0.2): replace the echo with a real extraction once the grammar
+      #             (or a --json flag) is documented in docs/FORMATS.md.
+      # TODO(T7.6): exit 1 when always-on tokens exceed MAX_ALWAYS_ON_TOKENS.
+      #
+      # Observed on 2.1.220: `plugin details` accepts `--plugin-dir <path>` to
+      # load a plugin from disk, so this gate can measure the checkout without
+      # waiting on an npm publish once .claude-plugin/plugin.json exists.
+      - name: claude plugin details ccatlas (≤600 always-on tokens)
+        if: steps.probe.outputs.available == 'true'
+        continue-on-error: true # TODO(T7.6): make blocking
+        env:
+          MAX_ALWAYS_ON_TOKENS: '600'
+        run: |
+          echo "Budget ceiling: ${MAX_ALWAYS_ON_TOKENS} always-on tokens"
+          claude plugin details ccatlas
+          echo "NOT YET ENFORCED — see TODO(T0.2) / TODO(T7.6) in this workflow."
