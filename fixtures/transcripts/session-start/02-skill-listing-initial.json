@@ -2,9 +2,11 @@
   "__fixture": "attachment/skill_listing with isInitial:true - the session-start skill+command roster.",
   "__source": "<PROJECT-2>/708627c0 (2026-07-18), Claude Code 2.1.214",
   "__key_facts": [
-    "names[] is COMPLETE and length === skillCount.",
-    "content is a rendered listing TRUNCATED at 30000 chars - do not parse it.",
-    "names[] mixes personal skills (bare), plugin skills (<plugin>:<skill>) and user slash commands (<dir>:<name>)."
+    "names[] is COMPLETE and length === skillCount. Parse names[], not content.",
+    "content is a rendered listing held to a 30000-char budget. It is NOT row-truncated: it has exactly one row per skill (rows === skillCount, 0 unmatched in all sessions checked). What the budget drops is DESCRIPTIONS - in this record only 61 of 581 rows keep a description; the other 520 render as a bare '- name'.",
+    "CONSEQUENCE FOR THE COST MODEL: the always-on context cost of the skill listing is hard-capped at ~30000 chars (~7.5k tokens) regardless of roster size. Above the cap the marginal always-on cost of one more skill is its name plus 3 chars, NOT its description. Per-entity always-on cost is therefore NOT additive above the cap. See FINDINGS error mode 6.",
+    "The cap applies to skill_listing only - agent_listing_delta.addedLines carries all 80 full descriptions uncapped, and deferred_tools_delta shows no cap.",
+    "names[] mixes personal skills (bare), plugin skills (<plugin>:<skill>), user slash commands (<dir>:<name>) and built-in skills (bare). Bare does NOT mean personal."
   ],
   "record": {
     "parentUuid": "00000000-0000-4000-8000-000000000012",
@@ -20,7 +22,7 @@
     "gitBranch": "<BRANCH>",
     "attachment": {
       "type": "skill_listing",
-      "content": "- agent-harness-construction: Design and optimize AI agent action spaces, tool definitions, and observation formatting for higher completion rates.\n- agentdb-advanced: Master advanced AgentDB features including QUIC synchronization, multi-database management, custom distance metrics, hybrid search, <CONTENT-TRUNCATED original_length=29999>",
+      "content": "- agent-harness-construction: Design and optimize AI agent action spaces, tool definitions, and observation formatting for higher completion rates.\n- agentdb-advanced: Master advanced AgentDB features including QUIC synchronization, multi-database management, custom distance metrics, hybrid search, <CONTENT-ELIDED-BY-REDACTION full_length=29999>",
       "__content_length": 29999,
       "__content_tail": "- security-review: Complete a security review of the pending changes on the current branch",
       "skillCount": 581,
@@ -38,7 +40,10 @@
         "review",
         "security-review"
       ],
-      "__names_length": 581
+      "__names_length": 581,
+      "__content_note": "The elision above is OUR redaction, not Claude Code truncation. Claude Code emitted all 581 rows within 29999 chars by dropping descriptions.",
+      "__rows_with_description": 61,
+      "__rows_bare_name_only": 520
     }
   }
 }

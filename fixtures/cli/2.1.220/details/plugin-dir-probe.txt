@@ -1,0 +1,35 @@
+# --plugin-dir probe (Claude Code 2.1.220). Paths redacted to <HOME>/<SCRATCH>.
+
+$ claude plugin details --plugin-dir <path> frontend-design    # AFTER subcommand
+  exit=1  stderr=error: unknown option '--plugin-dir'
+
+$ claude --plugin-dir <SCRATCH>/checkout plugin details frontend-design   # BEFORE subcommand; dir is an out-of-tree copy, NOT installed
+frontend-design
+  Frontend design skill for UI/UX implementation
+  Source: frontend-design@inline
+
+Component inventory
+  Skills (1)  frontend-design
+  Agents (0)
+  Hooks (0)
+  MCP servers (0)
+  LSP servers (0)
+
+Projected token cost
+  Always-on:   ~78 tok   added to every session
+
+Per-component (rounded)
+  component        always-on  on-invoke
+  frontend-design        ~80      ~2.4k
+
+  On-invoke cost is paid each time a skill or agent fires.
+  Token counts are estimates and may differ from actual usage.
+  exit=0
+
+# Compare: same plugin via normal installed resolution
+  Source: frontend-design@claude-plugins-official
+  Always-on:   ~78 tok   added to every session
+  frontend-design        ~80      ~2.4k
+
+# DELTA: only the Source: line differs -- '@inline' vs '@claude-plugins-official'.
+# Cost sections populate identically (~78 tok; ~80 / ~2.4k). T7.6 CI gate is viable without publishing.
