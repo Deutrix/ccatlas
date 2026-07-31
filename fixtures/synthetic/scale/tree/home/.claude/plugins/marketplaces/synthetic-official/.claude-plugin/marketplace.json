@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-official",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-official.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-atlas",
+      "description": "SYNTHETIC FIXTURE — sy-atlas.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-atlas.git",
+        "sha": "066521d438916cf9f915f0553a7c1610e5213f25"
+      }
+    },
+    {
+      "name": "sy-beacon",
+      "description": "SYNTHETIC FIXTURE — sy-beacon.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-beacon"
+      }
+    },
+    {
+      "name": "sy-cinder",
+      "description": "SYNTHETIC FIXTURE — sy-cinder.",
+      "source": "./plugins/sy-cinder"
+    },
+    {
+      "name": "sy-dynamo",
+      "description": "SYNTHETIC FIXTURE — sy-dynamo.",
+      "source": "./plugins/sy-dynamo"
+    },
+    {
+      "name": "sy-ember",
+      "description": "SYNTHETIC FIXTURE — sy-ember.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-ember.git",
+        "sha": "60b97e7053fe89f7395b2c35b3a768d1440c2bbd"
+      }
+    },
+    {
+      "name": "sy-forge",
+      "description": "SYNTHETIC FIXTURE — sy-forge.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-forge"
+      }
+    },
+    {
+      "name": "sy-grove",
+      "description": "SYNTHETIC FIXTURE — sy-grove.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-grove",
+        "sha": "6d9ea2803408a41884187b7a0feaa53c45e4080a"
+      }
+    },
+    {
+      "name": "sy-harbor",
+      "description": "SYNTHETIC FIXTURE — sy-harbor.",
+      "source": "./plugins/sy-harbor"
+    }
+  ],
+  "renames": {
+    "sy-atlas-legacy": "sy-atlas",
+    "sy-old-beacon": "sy-beacon"
+  }
+}

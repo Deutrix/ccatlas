@@ -1,0 +1,48 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 — \"no local-scope plugin keys\". The real settings.local.json carries only `permissions` + `enabledMcpjsonServers`, so local-scope plugin precedence has never been exercised.",
+    "unblocks": ["T1.2"],
+    "scope": "local",
+    "standsInFor": "~/.claude/settings.local.json (user-local) — see ./README.md §'Which file is local scope?'",
+    "oracle": "./expected-precedence.json",
+    "warning": "SYNTHETIC FIXTURE. `enabledPlugins`, `extraKnownMarketplaces`, `pluginConfigs` and `env` at local scope were NEVER observed. Their presence here is the point of the fixture, not evidence that Claude Code reads them at this scope."
+  },
+
+  "enabledPlugins": {
+    "alpha@synthetic-market": true,
+    "bravo@synthetic-market": true,
+    "foxtrot@synthetic-market": false
+  },
+
+  "extraKnownMarketplaces": {
+    "local-only-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/local-only-market"
+      }
+    }
+  },
+
+  "pluginConfigs": {
+    "alpha@synthetic-market": {
+      "sync_repo": "https://example.invalid/synthetic/LOCAL-MUST-BE-IGNORED.git"
+    },
+    "charlie@synthetic-market": {
+      "sync_repo": "https://example.invalid/synthetic/LOCAL-MUST-BE-IGNORED.git"
+    }
+  },
+
+  "env": {
+    "CCATLAS_SYNTHETIC_SCOPE_WINNER": "local",
+    "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT": "local"
+  },
+
+  "permissions": {
+    "allow": [
+      "Bash(echo synthetic-local:*)"
+    ]
+  },
+
+  "enabledMcpjsonServers": ["synthetic-repo-server"]
+}

@@ -1,0 +1,78 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "Reference scale — 4 marketplaces / 5 plugins locally vs floors of >=5 / >=20",
+    "unblocks": [
+      "T1.11"
+    ],
+    "generatedBy": "fixtures/synthetic/generate.mjs build"
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(echo synthetic:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "sy-atlas@synthetic-official": true,
+    "sy-beacon@synthetic-official": true,
+    "sy-cinder@synthetic-official": true,
+    "sy-dynamo@synthetic-official": true,
+    "sy-ember@synthetic-official": true,
+    "sy-forge@synthetic-official": true,
+    "sy-grove@synthetic-official": true,
+    "sy-harbor@synthetic-official": true,
+    "sy-ion@synthetic-alpha": true,
+    "sy-jade@synthetic-alpha": true,
+    "sy-kite@synthetic-alpha": true,
+    "sy-lumen@synthetic-alpha": true,
+    "sy-mesa@synthetic-alpha": true,
+    "sy-nimbus@synthetic-bravo": true,
+    "sy-onyx@synthetic-bravo": true,
+    "sy-prism@synthetic-bravo": true,
+    "sy-quartz@synthetic-bravo": true,
+    "sy-ridge@synthetic-charlie": true,
+    "sy-slate@synthetic-charlie": true,
+    "sy-tundra@synthetic-charlie": true,
+    "sy-umber@synthetic-delta": true,
+    "sy-vertex@synthetic-delta": true,
+    "sy-willow@synthetic-echo": true,
+    "sy-xenon@synthetic-echo": false
+  },
+  "extraKnownMarketplaces": {
+    "synthetic-alpha": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/synthetic-alpha"
+      }
+    },
+    "synthetic-bravo": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/synthetic-bravo"
+      }
+    },
+    "synthetic-charlie": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/synthetic-charlie"
+      }
+    },
+    "synthetic-delta": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/synthetic-delta"
+      }
+    },
+    "synthetic-echo": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/synthetic-echo"
+      }
+    }
+  },
+  "autoUpdatesChannel": "latest",
+  "theme": "dark"
+}

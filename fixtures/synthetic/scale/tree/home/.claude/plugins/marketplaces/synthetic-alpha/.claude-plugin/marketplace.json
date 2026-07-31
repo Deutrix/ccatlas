@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-alpha",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-alpha.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-ion",
+      "description": "SYNTHETIC FIXTURE — sy-ion.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-ion.git",
+        "sha": "455fbfc302c98942de5dadc063b0ea3d9f35ce4e"
+      }
+    },
+    {
+      "name": "sy-jade",
+      "description": "SYNTHETIC FIXTURE — sy-jade.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-jade"
+      }
+    },
+    {
+      "name": "sy-kite",
+      "description": "SYNTHETIC FIXTURE — sy-kite.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-kite",
+        "sha": "51bef9494df2d60e27e00d241e5d98458c4b25ad"
+      }
+    },
+    {
+      "name": "sy-lumen",
+      "description": "SYNTHETIC FIXTURE — sy-lumen.",
+      "source": "./plugins/sy-lumen"
+    },
+    {
+      "name": "sy-mesa",
+      "description": "SYNTHETIC FIXTURE — sy-mesa.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-mesa.git",
+        "sha": "282b760b60af3fe90d9825a995676cd3a3edfadf"
+      }
+    }
+  ]
+}

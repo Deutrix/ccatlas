@@ -1,0 +1,106 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 — \"No @skills-dir plugin exists locally\" (161 directories under ~/.claude/skills/, not one contains .claude-plugin/plugin.json)",
+    "unblocks": ["T1.4"],
+    "role": "TEST ORACLE for ./skills/ — one true positive, three false-positive traps, one plain-personal negative."
+  },
+
+  "root": "./skills/",
+  "rootStandsInFor": "~/.claude/skills/",
+
+  "detectionRule": {
+    "statement": "A directory under the personal skills root is an @skills-dir plugin if and only if it contains `.claude-plugin/plugin.json`.",
+    "source": "docs/tasks.md T1.4 (\"Detect @skills-dir plugins by their .claude-plugin/plugin.json\"); docs/02-architecture.md §4.1 (manifests load only from .claude-plugin/)",
+    "status": "DOCUMENTED",
+    "antiRule": "Do NOT glob `**/plugin.json`. FORMATS.md §0 trap #14: sibling .cursor-plugin/ .codex-plugin/ .kimi-plugin/ manifests make that return ~2x the real count — 16 files for 7 plugins on the reference machine."
+  },
+
+  "expected": [
+    {
+      "path": "./skills/synthetic-skills-dir-plugin",
+      "isPlugin": true,
+      "manifest": "./skills/synthetic-skills-dir-plugin/.claude-plugin/plugin.json",
+      "name": "synthetic-skills-dir-plugin",
+      "version": "0.3.1",
+      "versionSource": "plugin-json",
+      "origin": "skills-dir",
+      "contributes": {
+        "skills": ["synthetic-alpha-skill", "synthetic-bravo-skill"],
+        "agents": ["synthetic-reviewer"],
+        "commands": ["synthetic-report"]
+      },
+      "why": "The only true positive. Carries .claude-plugin/plugin.json."
+    },
+    {
+      "path": "./skills/synthetic-bravo-skill",
+      "isPlugin": false,
+      "origin": "personal",
+      "why": "NEGATIVE — a plain personal skill directory, the shape all 161 reference-machine directories have. Also collides by name with the plugin-contributed synthetic-bravo-skill (see shadowing below)."
+    },
+    {
+      "path": "./skills/synthetic-decoy-only",
+      "isPlugin": false,
+      "origin": "personal",
+      "trap": "foreign-manifest",
+      "why": "NEGATIVE — carries .cursor-plugin/plugin.json and no Claude Code manifest. A `**/plugin.json` glob promotes it; the correct rule does not."
+    },
+    {
+      "path": "./skills/synthetic-misplaced-manifest",
+      "isPlugin": false,
+      "origin": "personal",
+      "trap": "manifest-at-directory-root",
+      "why": "NEGATIVE — a well-formed manifest at the directory root instead of inside .claude-plugin/. Claude Code does not load it, so ccatlas must not report it."
+    }
+  ],
+
+  "counts": {
+    "pluginsDetected": 1,
+    "personalSkillDirectories": 3,
+    "filesNamedPluginJsonAnywhereUnderRoot": 6,
+    "__countNote": "6 files are named plugin.json under ./skills/. Exactly ONE is a Claude Code manifest. A detector reporting 6, 5 or 2 plugins has fallen into trap #14; a detector reporting 0 is looking one directory level too shallow."
+  },
+
+  "shadowing": {
+    "__note": "Feeds T1.7. Both records must be emitted, with the precedence winner named — never silently deduplicated.",
+    "entries": [
+      {
+        "kind": "skill",
+        "name": "synthetic-bravo-skill",
+        "definedAt": [
+          { "origin": "skills-dir", "owner": "synthetic-skills-dir-plugin", "path": "./skills/synthetic-skills-dir-plugin/skills/synthetic-bravo-skill/SKILL.md" },
+          { "origin": "personal", "owner": null, "path": "./skills/synthetic-bravo-skill/SKILL.md" }
+        ],
+        "winner": "UNRESOLVED",
+        "winnerStatus": "The personal-vs-plugin skill precedence order is not recorded in docs/FORMATS.md and was not observed. This fixture asserts only that BOTH are reported; it deliberately does not assert which wins."
+      },
+      {
+        "kind": "command",
+        "name": "synthetic-report",
+        "definedAt": [
+          { "origin": "skills-dir", "owner": "synthetic-skills-dir-plugin", "path": "./skills/synthetic-skills-dir-plugin/commands/synthetic-report.md" },
+          { "origin": "personal", "owner": null, "path": "../scale/tree/home/.claude/commands/synthetic-report.md" }
+        ],
+        "winner": "UNRESOLVED",
+        "relevantTrap": "FORMATS.md §0 trap #16 — command names are recorded BARE in transcripts, with no plugin namespace, so owner attribution must go through the inventory. This is a partial fixture for the §5 gap \"A command name colliding across two plugins\": it collides personal-vs-plugin, not plugin-vs-plugin."
+      }
+    ]
+  },
+
+  "unresolved": {
+    "identityForm": {
+      "question": "What is a @skills-dir plugin's canonical id? Marketplace-sourced plugins are `<plugin>@<marketplace>` (FORMATS.md §1), and the marketplace name appears ONLY in that suffix. A @skills-dir plugin has no marketplace.",
+      "status": "UNRESOLVED — deliberately not invented here.",
+      "candidatesNotAsserted": ["<name>@skills-dir", "<name> (bare)", "<name>@local"],
+      "note": "docs/01-prd.md §99 lists `@skills-dir` as an ORIGIN, alongside `marketplace`, `personal`, `project` and `--plugin-dir`. This fixture therefore asserts `origin: \"skills-dir\"` and leaves the id form to T1.6's normalisation. Whatever T1.6 picks, it must not collide with a real marketplace named `skills-dir`."
+    },
+    "distinguishingFromMarketplaceSourced": {
+      "rule": "A marketplace-sourced plugin has an entry in `plugins/installed_plugins.json` and a key in `settings.json → enabledPlugins`, and lives under `plugins/cache/<marketplace>/<plugin>/<version>/`. This plugin has NONE of those: it lives under the personal skills root, and is absent from both files.",
+      "status": "DERIVED from FORMATS.md §2 — the two populations are disjoint by location, so the check is 'is its path under plugins/cache/?', not a manifest-content check.",
+      "consequence": "Its enabled state has no home. `enabledPlugins` is the ONLY home of the enabled bit (FORMATS.md §2) and it has no key there. ccatlas must report its state as `enabled (implicit)` or `unknown` — NOT `disabled` — and must not synthesise an enabledPlugins key for it."
+    },
+    "tokenCost": {
+      "status": "NOT PROVIDED. No `plugin details` text fixture accompanies this plugin. Token figures come from an estimator with three observed regimes ~40% apart (FORMATS.md §0 trap #3), so a fabricated cost table would certify T4.7/T4.8 against invented numbers. Measure it live with `claude --plugin-dir <path> plugin details <name>` if a cost fixture is needed — that path works on an uninstalled checkout (FORMATS.md §1)."
+    }
+  }
+}

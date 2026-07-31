@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sy-prism",
+  "description": "SYNTHETIC FIXTURE — generated plugin sy-prism. Reference-scale tree for the T1.11 perf gate. Not a real plugin.",
+  "author": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "homepage": "https://example.invalid/sy-prism",
+  "license": "MIT",
+  "keywords": [
+    "synthetic",
+    "fixture",
+    "ccatlas"
+  ],
+  "version": "0.8.0",
+  "skills": [
+    "./skills/"
+  ]
+}

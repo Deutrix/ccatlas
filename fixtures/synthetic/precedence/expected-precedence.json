@@ -1,0 +1,435 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 — \"No project-scope .claude/settings.json, no local-scope plugin keys, pluginConfigs absent → T1.2 4-scope precedence is untestable here\"",
+    "unblocks": ["T1.2"],
+    "role": "TEST ORACLE for ./user-settings.json + ./project-settings.json + ./local-settings.json + ./managed-settings.json",
+    "warning": "SYNTHETIC. This file states what a correct resolver MUST produce. Every assertion carries a `status`: only `CERTIFIABLE` assertions are safe to gate on. `MODEL-DEPENDENT` assertions have two defensible answers and exist to force T1.2 to declare which model it implements."
+  },
+
+  "inputs": {
+    "user": "./user-settings.json",
+    "project": "./project-settings.json",
+    "local": "./local-settings.json",
+    "managed": "./managed-settings.json"
+  },
+
+  "scopeOrder": {
+    "highestFirst": ["managed", "local", "project", "user"],
+    "status": "ASSERTED",
+    "source": "docs/tasks.md T1.2 (\"user · project · local · managed\") establishes the four scopes but not their order. The order above is the conventional Claude Code settings order and is ASSERTED, not observed on the reference machine — no project-scope or managed-scope file exists there to observe it with.",
+    "howToFalsify": "Create a project-scope and a local-scope settings.json on a scratch machine with a conflicting scalar (e.g. permissions.defaultMode) and read back the effective value."
+  },
+
+  "rules": {
+    "R1": {
+      "statement": "managed scope beats every other scope for a key it defines.",
+      "status": "ASSERTED"
+    },
+    "R2": {
+      "statement": "local scope beats project scope.",
+      "status": "ASSERTED"
+    },
+    "R3": {
+      "statement": "project scope beats user scope.",
+      "status": "ASSERTED"
+    },
+    "R4": {
+      "statement": "pluginConfigs is read ONLY from user settings, --settings, and managed settings. Project- and local-scope pluginConfigs are ignored entirely — not overridden, IGNORED — because a cloned repo could otherwise inject values into hook commands and MCP server configs.",
+      "status": "DOCUMENTED",
+      "source": "docs/02-architecture.md line 158",
+      "note": "This is the highest-value rule in this oracle: it is non-obvious, it has exactly one right answer, and it covers the one key that was entirely absent from the reference machine. A resolver that applies the generic scope order to pluginConfigs is a security bug, not a precedence bug."
+    },
+    "R5": {
+      "statement": "A scalar-valued key (e.g. permissions.defaultMode) is replaced outright by the highest scope that defines it.",
+      "status": "CERTIFIABLE",
+      "note": "Model-independent: replacement and merge agree on scalars."
+    },
+    "R6": {
+      "statement": "A deny rule anywhere beats an allow rule for the same pattern.",
+      "status": "ASSERTED",
+      "note": "Holds under BOTH candidate array models here, because the deny is at managed scope (the highest) AND deny conventionally outranks allow. The fixture is constructed so the two justifications cannot be told apart — this assertion tests the outcome, not the mechanism."
+    },
+    "R7": {
+      "statement": "A key defined at exactly one scope resolves to that scope's value.",
+      "status": "MODEL-DEPENDENT",
+      "note": "True under per-key merge. FALSE under scope replacement whenever a HIGHER scope also defines the enclosing object — the higher scope's whole object replaces the lower one and the singly-defined entry disappears. See `mergeGranularity`."
+    }
+  },
+
+  "mergeGranularity": {
+    "__why": "Nothing in the captured corpus witnesses whether Claude Code replaces a whole Record-shaped setting with the winning scope's object, or merges entry-by-entry across scopes. The two models disagree on every entry that exists at only one scope. Rather than pick one silently, this oracle labels each such assertion MODEL-DEPENDENT and ships fixtures that DISCRIMINATE the models. T1.2 must declare which model it implements; whichever it declares, these assertions catch the other.",
+    "models": {
+      "per-key-merge": "Records are merged entry by entry; for each entry key, the highest scope defining THAT entry wins. Entries defined at only one scope survive.",
+      "scope-replacement": "The highest scope defining the setting at all supplies the entire object; lower scopes contribute nothing.",
+      "array-union": "(permissions only) allow/deny/ask arrays are unioned across all scopes rather than replaced, with deny outranking allow."
+    },
+    "perKey": {
+      "enabledPlugins": {
+        "assumed": "per-key-merge",
+        "alternative": "scope-replacement",
+        "effectOfAlternative": "managed defines enabledPlugins, so under scope-replacement the resolved map would be exactly {\"bravo@synthetic-market\": false} and the other six entries would vanish.",
+        "discriminators": ["EP-delta", "EP-golf", "EP-echo", "EP-foxtrot", "EP-alpha", "EP-charlie"]
+      },
+      "extraKnownMarketplaces": {
+        "assumed": "per-key-merge",
+        "alternative": "scope-replacement",
+        "effectOfAlternative": "managed defines extraKnownMarketplaces, so under scope-replacement only `other-synthetic-market` would survive.",
+        "discriminators": ["MK-user-only", "MK-local-only", "MK-synthetic-market"]
+      },
+      "pluginConfigs": {
+        "assumed": "per-key-merge, restricted to {user, managed} by R4",
+        "alternative": "scope-replacement, restricted to {user, managed} by R4",
+        "effectOfAlternative": "managed defines pluginConfigs, so under scope-replacement only `bravo@synthetic-market` would survive and `alpha@synthetic-market` would vanish.",
+        "discriminators": ["PC-alpha"],
+        "modelIndependent": ["PC-bravo", "PC-charlie-absent"]
+      },
+      "env": {
+        "assumed": "per-key-merge",
+        "alternative": "scope-replacement",
+        "effectOfAlternative": "managed defines env, so under scope-replacement the resolved env would be exactly the two managed vars.",
+        "discriminators": ["ENV-user-only", "ENV-local-over-project", "ENV-project-over-user"]
+      },
+      "permissions": {
+        "assumed": "array-union across scopes, with deny outranking allow; scalars replaced per R5",
+        "alternative": "scope-replacement per array field (the highest scope defining `allow` supplies the whole allow list)",
+        "effectOfAlternative": "managed does not define `allow`, local does — so under scope-replacement `allow` would be exactly [\"Bash(echo synthetic-local:*)\"] and the user/project allow rules would vanish. `additionalDirectories` would be [\"/synthetic/project-extra-dir\"] (project is the highest scope defining it).",
+        "discriminators": ["PERM-allow-union", "PERM-additional-dirs"],
+        "modelIndependent": ["PERM-default-mode", "PERM-curl-denied"]
+      }
+    }
+  },
+
+  "expectations": [
+    {
+      "id": "EP-alpha",
+      "setting": "enabledPlugins",
+      "entry": "alpha@synthetic-market",
+      "definedAt": { "user": true, "project": false, "local": true },
+      "expectedScope": "local",
+      "expectedValue": true,
+      "rule": "R2",
+      "status": "MODEL-DEPENDENT",
+      "why": "local beats project beats user. Under scope-replacement the entry disappears because managed defines the enclosing object without this key."
+    },
+    {
+      "id": "EP-bravo",
+      "setting": "enabledPlugins",
+      "entry": "bravo@synthetic-market",
+      "definedAt": { "user": true, "project": true, "local": true, "managed": false },
+      "expectedScope": "managed",
+      "expectedValue": false,
+      "rule": "R1",
+      "status": "CERTIFIABLE",
+      "why": "managed defines the entry, so both merge models agree: managed wins."
+    },
+    {
+      "id": "EP-charlie",
+      "setting": "enabledPlugins",
+      "entry": "charlie@synthetic-market",
+      "definedAt": { "user": true, "project": false },
+      "expectedScope": "project",
+      "expectedValue": false,
+      "rule": "R3",
+      "status": "MODEL-DEPENDENT",
+      "why": "project beats user. This is the entry that proves a plugin can be DISABLED for one repo while enabled globally — the whole point of project scope."
+    },
+    {
+      "id": "EP-delta",
+      "setting": "enabledPlugins",
+      "entry": "delta@synthetic-market",
+      "definedAt": { "user": true },
+      "expectedScope": "user",
+      "expectedValue": true,
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "PRIMARY DISCRIMINATOR. Enabled at user scope only. Under per-key merge it survives; under scope-replacement it vanishes."
+    },
+    {
+      "id": "EP-golf",
+      "setting": "enabledPlugins",
+      "entry": "golf@synthetic-market",
+      "definedAt": { "user": false },
+      "expectedScope": "user",
+      "expectedValue": false,
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "DISCRIMINATOR with the opposite polarity to EP-delta: a false at user scope only. Catches a resolver that treats `false` as `absent` — the enabled bit lives nowhere else (FORMATS.md §2), so losing a `false` re-enables a deliberately disabled plugin."
+    },
+    {
+      "id": "EP-echo",
+      "setting": "enabledPlugins",
+      "entry": "echo@other-synthetic-market",
+      "definedAt": { "project": true },
+      "expectedScope": "project",
+      "expectedValue": true,
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "Enabled by the project only. Also exercises the second marketplace suffix — the marketplace name appears ONLY in the key suffix (FORMATS.md §1)."
+    },
+    {
+      "id": "EP-foxtrot",
+      "setting": "enabledPlugins",
+      "entry": "foxtrot@synthetic-market",
+      "definedAt": { "local": false },
+      "expectedScope": "local",
+      "expectedValue": false,
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "Disabled at local scope only — the case docs/FORMATS.md §5 records as never observed (\"no local-scope plugin keys\")."
+    },
+
+    {
+      "id": "MK-synthetic-market",
+      "setting": "extraKnownMarketplaces",
+      "entry": "synthetic-market",
+      "definedAt": { "user": true, "project": true },
+      "expectedScope": "project",
+      "expectedValue": { "source": { "source": "github", "repo": "synthetic-org/PROJECT-SCOPE-WINS" } },
+      "rule": "R3",
+      "status": "MODEL-DEPENDENT",
+      "why": "project beats user. The losing repo slug is literally named USER-SCOPE-LOSES so a wrong answer is legible in a diff."
+    },
+    {
+      "id": "MK-other",
+      "setting": "extraKnownMarketplaces",
+      "entry": "other-synthetic-market",
+      "definedAt": { "user": true, "project": true, "managed": true },
+      "expectedScope": "managed",
+      "expectedValue": { "source": { "source": "git", "url": "https://example.invalid/synthetic/MANAGED-SCOPE-WINS.git", "ref": "main" } },
+      "rule": "R1",
+      "status": "CERTIFIABLE",
+      "sourceShapeStatus": "PARTIAL — the KEY UNION {source, repo?, url?, path?, ref?} is observed (fixtures/files/FINDINGS.md §4), but the literal value \"git\" for source.source is NOT: all four real marketplaces are \"github\". This entry does NOT close the FORMATS.md §5 gap \"Non-github marketplace source types\" and must not be cited as evidence for T2.2's resolver branches.",
+      "why": "managed wins, and the winning value has a different source-object arity from the losers — so a resolver that merges the two OBJECTS instead of replacing one with the other produces a detectable Frankenstein ({source:\"git\", repo:…, url:…, ref:…})."
+    },
+    {
+      "id": "MK-user-only",
+      "setting": "extraKnownMarketplaces",
+      "entry": "user-only-market",
+      "definedAt": { "user": true },
+      "expectedScope": "user",
+      "expectedValue": { "source": { "source": "github", "repo": "synthetic-org/user-only-market" } },
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "DISCRIMINATOR."
+    },
+    {
+      "id": "MK-local-only",
+      "setting": "extraKnownMarketplaces",
+      "entry": "local-only-market",
+      "definedAt": { "local": true },
+      "expectedScope": "local",
+      "expectedValue": { "source": { "source": "github", "repo": "synthetic-org/local-only-market" } },
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "DISCRIMINATOR, and a marketplace declared at local scope only — docs/FORMATS.md §5 records local-scope plugin keys as never observed."
+    },
+
+    {
+      "id": "PC-alpha",
+      "setting": "pluginConfigs",
+      "entry": "alpha@synthetic-market",
+      "definedAt": { "user": true, "project": true, "local": true },
+      "expectedScope": "user",
+      "expectedValue": {
+        "sync_repo": "https://example.invalid/synthetic/user-scope-WINS.git",
+        "session_drift_check": true
+      },
+      "rule": "R4",
+      "status": "DOCUMENTED",
+      "why": "🔒 THE SECURITY-RELEVANT ASSERTION. project and local both define this entry and both MUST be ignored. A resolver applying the generic scope order returns the LOCAL value and a cloned repo has just chosen the sync target. The losing values are named PROJECT-MUST-BE-IGNORED / LOCAL-MUST-BE-IGNORED."
+    },
+    {
+      "id": "PC-bravo",
+      "setting": "pluginConfigs",
+      "entry": "bravo@synthetic-market",
+      "definedAt": { "user": true, "managed": true },
+      "expectedScope": "managed",
+      "expectedValue": { "threshold": 500 },
+      "rule": "R1+R4",
+      "status": "DOCUMENTED",
+      "why": "managed is one of the two scopes R4 permits, and it outranks user."
+    },
+    {
+      "id": "PC-charlie-absent",
+      "setting": "pluginConfigs",
+      "entry": "charlie@synthetic-market",
+      "definedAt": { "project": true, "local": true },
+      "expectedScope": null,
+      "expectedValue": null,
+      "expectedPresent": false,
+      "rule": "R4",
+      "status": "DOCUMENTED",
+      "why": "🔒 STRONGEST FORM OF R4. Defined ONLY at the two ignored scopes, so the resolved pluginConfigs must contain NO entry for charlie@synthetic-market at all. Any resolver that emits a value here has an injection path."
+    },
+
+    {
+      "id": "ENV-scope-winner",
+      "setting": "env",
+      "entry": "CCATLAS_SYNTHETIC_SCOPE_WINNER",
+      "definedAt": { "user": true, "project": true, "local": true, "managed": true },
+      "expectedScope": "managed",
+      "expectedValue": "managed",
+      "rule": "R1",
+      "status": "CERTIFIABLE",
+      "why": "All four scopes define it; the value is literally the name of the scope that should win, so a wrong answer names its own bug."
+    },
+    {
+      "id": "ENV-local-over-project",
+      "setting": "env",
+      "entry": "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT",
+      "definedAt": { "user": true, "project": true, "local": true },
+      "expectedScope": "local",
+      "expectedValue": "local",
+      "rule": "R2",
+      "status": "MODEL-DEPENDENT"
+    },
+    {
+      "id": "ENV-project-over-user",
+      "setting": "env",
+      "entry": "CCATLAS_SYNTHETIC_PROJECT_OVER_USER",
+      "definedAt": { "user": true, "project": true },
+      "expectedScope": "project",
+      "expectedValue": "project",
+      "rule": "R3",
+      "status": "MODEL-DEPENDENT"
+    },
+    {
+      "id": "ENV-user-only",
+      "setting": "env",
+      "entry": "CCATLAS_SYNTHETIC_USER_ONLY",
+      "definedAt": { "user": true },
+      "expectedScope": "user",
+      "expectedValue": "user",
+      "rule": "R7",
+      "status": "MODEL-DEPENDENT",
+      "why": "DISCRIMINATOR."
+    },
+    {
+      "id": "ENV-managed-only",
+      "setting": "env",
+      "entry": "CCATLAS_SYNTHETIC_MANAGED_ONLY",
+      "definedAt": { "managed": true },
+      "expectedScope": "managed",
+      "expectedValue": "managed",
+      "rule": "R7",
+      "status": "CERTIFIABLE",
+      "why": "Defined only at the highest scope, so it survives under both models."
+    },
+
+    {
+      "id": "PERM-default-mode",
+      "setting": "permissions.defaultMode",
+      "definedAt": { "user": "default", "project": "acceptEdits", "managed": "plan" },
+      "expectedScope": "managed",
+      "expectedValue": "plan",
+      "rule": "R5",
+      "status": "CERTIFIABLE",
+      "why": "Scalar. Merge and replacement agree. This is the one permissions assertion safe to gate on unconditionally."
+    },
+    {
+      "id": "PERM-curl-denied",
+      "setting": "permissions (effective decision)",
+      "entry": "Bash(curl:*)",
+      "definedAt": { "user": "allow", "managed": "deny" },
+      "expectedDecision": "deny",
+      "rule": "R1+R6",
+      "status": "CERTIFIABLE",
+      "why": "Asserts the DECISION, not the array contents — so it holds under array-union-with-deny-wins and under managed-replaces-everything alike. An allow at user scope must never defeat a managed deny."
+    },
+    {
+      "id": "PERM-allow-union",
+      "setting": "permissions.allow",
+      "definedAt": { "user": 3, "project": 1, "local": 1 },
+      "expectedValueUnderUnion": [
+        "Bash(echo synthetic-user:*)",
+        "Bash(curl:*)",
+        "Read(//synthetic/shared/**)",
+        "Bash(echo synthetic-project:*)",
+        "Bash(echo synthetic-local:*)"
+      ],
+      "expectedValueUnderReplacement": [
+        "Bash(echo synthetic-local:*)"
+      ],
+      "status": "MODEL-DEPENDENT",
+      "why": "PRIMARY PERMISSIONS DISCRIMINATOR. managed defines `deny` but not `allow`; local is the highest scope defining `allow`. Union yields 5 rules, replacement yields 1. Order within the union is not asserted — compare as a set.",
+      "note": "`Bash(curl:*)` appears in this allow union AND in the managed deny list. Whatever the array model, PERM-curl-denied must still resolve to deny."
+    },
+    {
+      "id": "PERM-additional-dirs",
+      "setting": "permissions.additionalDirectories",
+      "definedAt": { "user": ["/synthetic/user-extra-dir"], "project": ["/synthetic/project-extra-dir"] },
+      "expectedValueUnderUnion": ["/synthetic/user-extra-dir", "/synthetic/project-extra-dir"],
+      "expectedValueUnderReplacement": ["/synthetic/project-extra-dir"],
+      "status": "MODEL-DEPENDENT",
+      "why": "Second array discriminator, on a field with no deny counterpart — isolates array-merge behaviour from allow/deny semantics."
+    }
+  ],
+
+  "resolvedUnderAssumedModel": {
+    "__note": "The full expected output IF T1.2 implements the `assumed` model for every key (per-key merge; array-union for permissions). Provided as a single golden object for a snapshot test. If T1.2 declares scope-replacement instead, this object is WRONG BY CONSTRUCTION and `mergeGranularity.perKey.*.effectOfAlternative` gives the correct one.",
+    "enabledPlugins": {
+      "alpha@synthetic-market": true,
+      "bravo@synthetic-market": false,
+      "charlie@synthetic-market": false,
+      "delta@synthetic-market": true,
+      "echo@other-synthetic-market": true,
+      "foxtrot@synthetic-market": false,
+      "golf@synthetic-market": false
+    },
+    "extraKnownMarketplaces": {
+      "synthetic-market": { "source": { "source": "github", "repo": "synthetic-org/PROJECT-SCOPE-WINS" } },
+      "other-synthetic-market": { "source": { "source": "git", "url": "https://example.invalid/synthetic/MANAGED-SCOPE-WINS.git", "ref": "main" } },
+      "user-only-market": { "source": { "source": "github", "repo": "synthetic-org/user-only-market" } },
+      "local-only-market": { "source": { "source": "github", "repo": "synthetic-org/local-only-market" } }
+    },
+    "pluginConfigs": {
+      "alpha@synthetic-market": {
+        "sync_repo": "https://example.invalid/synthetic/user-scope-WINS.git",
+        "session_drift_check": true
+      },
+      "bravo@synthetic-market": { "threshold": 500 }
+    },
+    "env": {
+      "CCATLAS_SYNTHETIC_SCOPE_WINNER": "managed",
+      "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT": "local",
+      "CCATLAS_SYNTHETIC_PROJECT_OVER_USER": "project",
+      "CCATLAS_SYNTHETIC_USER_ONLY": "user",
+      "CCATLAS_SYNTHETIC_MANAGED_ONLY": "managed"
+    },
+    "permissions": {
+      "defaultMode": "plan",
+      "allow": [
+        "Bash(echo synthetic-user:*)",
+        "Bash(curl:*)",
+        "Read(//synthetic/shared/**)",
+        "Bash(echo synthetic-project:*)",
+        "Bash(echo synthetic-local:*)"
+      ],
+      "deny": ["Bash(curl:*)"],
+      "additionalDirectories": ["/synthetic/user-extra-dir", "/synthetic/project-extra-dir"]
+    }
+  },
+
+  "shadowingReport": {
+    "__note": "T1.7 requires shadowed entities to be REPORTED, not silently dropped. `entries` holds ONLY genuine shadowing — an entry defined at 2+ scopes where a lower scope's value lost on precedence. Entries dropped by RULE rather than by precedence are a different finding class and are listed separately below; counting them as shadowing would force an implementation to emit a shadow record with an empty shadowed-scope list.",
+    "expectedShadowCount": 10,
+    "entries": [
+      { "setting": "enabledPlugins", "entry": "alpha@synthetic-market", "winner": "local", "shadowed": ["project", "user"] },
+      { "setting": "enabledPlugins", "entry": "bravo@synthetic-market", "winner": "managed", "shadowed": ["local", "project", "user"] },
+      { "setting": "enabledPlugins", "entry": "charlie@synthetic-market", "winner": "project", "shadowed": ["user"] },
+      { "setting": "extraKnownMarketplaces", "entry": "synthetic-market", "winner": "project", "shadowed": ["user"] },
+      { "setting": "extraKnownMarketplaces", "entry": "other-synthetic-market", "winner": "managed", "shadowed": ["project", "user"] },
+      { "setting": "pluginConfigs", "entry": "bravo@synthetic-market", "winner": "managed", "shadowed": ["user"] },
+      { "setting": "env", "entry": "CCATLAS_SYNTHETIC_SCOPE_WINNER", "winner": "managed", "shadowed": ["local", "project", "user"] },
+      { "setting": "env", "entry": "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT", "winner": "local", "shadowed": ["project", "user"] },
+      { "setting": "env", "entry": "CCATLAS_SYNTHETIC_PROJECT_OVER_USER", "winner": "project", "shadowed": ["user"] },
+      { "setting": "permissions.defaultMode", "entry": "defaultMode", "winner": "managed", "shadowed": ["project", "user"] }
+    ],
+    "expectedIgnoredByRuleCount": 2,
+    "ignoredByRule": [
+      { "setting": "pluginConfigs", "entry": "alpha@synthetic-market", "definedAt": ["user", "project", "local"], "resolvesTo": "user", "droppedScopes": ["project", "local"], "rule": "R4", "reason": "project and local are IGNORED for pluginConfigs, not outranked. The user value wins over nothing — it wins because it is the only value that was ever read. Reporting this as `shadowed by user` would misdescribe the mechanism and hide the security property." },
+      { "setting": "pluginConfigs", "entry": "charlie@synthetic-market", "definedAt": ["project", "local"], "resolvesTo": "ABSENT", "droppedScopes": ["project", "local"], "rule": "R4", "reason": "Both defining scopes are ignored, so the key resolves to nothing at all. A dropped-input record, not a shadowing record — and a good implementation says which." }
+    ]
+  }
+}

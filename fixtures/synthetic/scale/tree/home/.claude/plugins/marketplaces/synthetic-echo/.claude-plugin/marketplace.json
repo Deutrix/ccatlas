@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-echo",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-echo.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-willow",
+      "description": "SYNTHETIC FIXTURE — sy-willow.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-willow.git",
+        "sha": "177f9109c03abf0e84dac50655d23ebce0096d20"
+      }
+    },
+    {
+      "name": "sy-xenon",
+      "description": "SYNTHETIC FIXTURE — sy-xenon.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-xenon"
+      }
+    }
+  ]
+}

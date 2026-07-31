@@ -1,0 +1,11 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §0 trap #14 — sibling .cursor-plugin/ .codex-plugin/ .kimi-plugin/ manifests make `find -name plugin.json` return ~2x the real count",
+    "unblocks": ["T1.4"],
+    "role": "DECOY. This is NOT a Claude Code manifest. A collector that enumerates `**/plugin.json` instead of `**/.claude-plugin/plugin.json` will pick this up and report a plugin that does not exist."
+  },
+  "name": "synthetic-skills-dir-plugin",
+  "version": "0.3.1",
+  "description": "SYNTHETIC DECOY — a foreign-tool manifest sitting beside the real one. Must never be counted."
+}

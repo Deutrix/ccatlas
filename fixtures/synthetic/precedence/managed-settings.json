@@ -1,0 +1,44 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 / docs/tasks.md T1.2 — managed scope is one of the four scopes T1.2 must resolve, and NO managed-settings file exists on the reference machine (nor is its path recorded anywhere in docs/).",
+    "unblocks": ["T1.2"],
+    "scope": "managed",
+    "standsInFor": "the enterprise managed-settings file",
+    "pathStatus": "UNRESOLVED — no path for managed settings appears in docs/FORMATS.md, docs/02-architecture.md or docs/tasks.md. This fixture is deliberately PATH-AGNOSTIC: T1.2 must supply the platform path from primary documentation and this file is loaded by content, not by location. Do not infer a path from this filename.",
+    "oracle": "./expected-precedence.json",
+    "warning": "SYNTHETIC FIXTURE. Constructed, never observed."
+  },
+
+  "enabledPlugins": {
+    "bravo@synthetic-market": false
+  },
+
+  "extraKnownMarketplaces": {
+    "other-synthetic-market": {
+      "source": {
+        "source": "git",
+        "url": "https://example.invalid/synthetic/MANAGED-SCOPE-WINS.git",
+        "ref": "main"
+      }
+    }
+  },
+
+  "pluginConfigs": {
+    "bravo@synthetic-market": {
+      "threshold": 500
+    }
+  },
+
+  "env": {
+    "CCATLAS_SYNTHETIC_SCOPE_WINNER": "managed",
+    "CCATLAS_SYNTHETIC_MANAGED_ONLY": "managed"
+  },
+
+  "permissions": {
+    "defaultMode": "plan",
+    "deny": [
+      "Bash(curl:*)"
+    ]
+  }
+}

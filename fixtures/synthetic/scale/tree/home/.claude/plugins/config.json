@@ -1,0 +1,12 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/tasks.md \"Reference machine baseline\" — 4 marketplaces / 5 plugins locally vs T1.11 floors of >=5 / >=20",
+    "unblocks": [
+      "T1.11"
+    ],
+    "generatedBy": "node fixtures/synthetic/generate.mjs build",
+    "source": "fixtures/synthetic/scale/seed.json"
+  },
+  "repositories": {}
+}

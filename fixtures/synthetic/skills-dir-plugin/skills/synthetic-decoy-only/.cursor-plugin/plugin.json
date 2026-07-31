@@ -1,0 +1,11 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §0 trap #14 — foreign-tool manifests inflate a naive plugin.json count",
+    "unblocks": ["T1.4"],
+    "role": "DECOY, standalone. This directory has NO .claude-plugin/plugin.json. Detecting a plugin here is a false positive."
+  },
+  "name": "synthetic-decoy-only",
+  "version": "9.9.9",
+  "description": "SYNTHETIC DECOY — foreign-tool manifest with no Claude Code counterpart."
+}

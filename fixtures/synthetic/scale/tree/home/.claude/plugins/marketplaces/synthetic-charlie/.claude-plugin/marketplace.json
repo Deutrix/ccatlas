@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-charlie",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-charlie.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-ridge",
+      "description": "SYNTHETIC FIXTURE — sy-ridge.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-ridge.git",
+        "sha": "61d5108c383db777ee880014416a30a6338c66e7"
+      }
+    },
+    {
+      "name": "sy-slate",
+      "description": "SYNTHETIC FIXTURE — sy-slate.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-slate"
+      },
+      "version": "2.4.0"
+    },
+    {
+      "name": "sy-tundra",
+      "description": "SYNTHETIC FIXTURE — sy-tundra.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-tundra",
+        "sha": "0e17ec6ef0c2f5866ad5a8b99d2ad55050d57893"
+      }
+    }
+  ]
+}

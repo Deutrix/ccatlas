@@ -1,0 +1,11 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/02-architecture.md §4.1 — manifests load ONLY from .claude-plugin/plugin.json; components inside .claude-plugin/ silently fail to load",
+    "unblocks": ["T1.4"],
+    "role": "DECOY. A well-formed Claude Code manifest in the WRONG PLACE (directory root, not .claude-plugin/). Claude Code does not load it, so ccatlas must not report it."
+  },
+  "name": "synthetic-misplaced-manifest",
+  "version": "1.0.0",
+  "description": "SYNTHETIC DECOY — correct manifest content, wrong path. Not a plugin."
+}

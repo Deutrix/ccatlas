@@ -1,0 +1,109 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 / docs/tasks.md 'Reference machine baseline' — \"Only 4 marketplaces / 5 plugins → T1.11 and T2.11 📏 gates: do not certify against this machine\"",
+    "unblocks": ["T1.11"],
+    "role": "The complete, deterministic input to ./tree/. `node fixtures/synthetic/generate.mjs build` reads this file and nothing else. Editing it and re-running build is the ONLY supported way to change the tree."
+  },
+
+  "prngSeed": 20260731,
+  "baseTimestampMs": 1767225600000,
+  "__baseTimestampNote": "2026-01-01T00:00:00.000Z. Every ISO timestamp in the tree is baseTimestampMs + a fixed per-entity offset, so the tree contains no wall-clock value and regenerates byte-identically forever.",
+
+  "referenceScaleFloors": {
+    "marketplaces": 5,
+    "plugins": 20,
+    "skills": 30,
+    "mcpServers": 8,
+    "__source": "docs/tasks.md line 499 — T1.11 📏 perf floor definition. Reference machine had 4 / 5 / 161 / 14."
+  },
+
+  "personalSkills": 40,
+  "personalAgents": 8,
+  "personalCommands": 8,
+
+  "marketplaces": [
+    {
+      "name": "synthetic-official",
+      "repo": "synthetic-org/synthetic-official",
+      "clone": "gcs",
+      "__cloneNote": "No .git. Carries .gcs-sha only — mirrors claude-plugins-official, which holds 276 of 281 available plugins and breaks T2.2's git-HEAD path.",
+      "lastUpdatedOffsetDays": 0,
+      "hasRenames": true
+    },
+    { "name": "synthetic-alpha",   "repo": "synthetic-org/synthetic-alpha",   "clone": "git", "lastUpdatedOffsetDays": 3 },
+    { "name": "synthetic-bravo",   "repo": "synthetic-org/synthetic-bravo",   "clone": "git", "lastUpdatedOffsetDays": 17 },
+    { "name": "synthetic-charlie", "repo": "synthetic-org/synthetic-charlie", "clone": "git", "lastUpdatedOffsetDays": 61 },
+    { "name": "synthetic-delta",   "repo": "synthetic-org/synthetic-delta",   "clone": "git", "lastUpdatedOffsetDays": 128 },
+    { "name": "synthetic-echo",    "repo": "synthetic-org/synthetic-echo",    "clone": "git", "lastUpdatedOffsetDays": 210 }
+  ],
+
+  "plugins": [
+    { "name": "sy-atlas",  "marketplace": "synthetic-official", "version": "1.0.0",   "enabled": true },
+    { "name": "sy-beacon", "marketplace": "synthetic-official", "version": "2.3.1",   "enabled": true, "skills": ["sy-beacon-audit", "sy-beacon-report"] },
+    { "name": "sy-cinder", "marketplace": "synthetic-official", "version": "unknown", "enabled": true, "noSha": true, "sourceKind": "string-relative",
+      "__quirk": "Version resolves to the literal string 'unknown' and the cache dir is literally .../unknown/. Source is a relative path inside a non-git marketplace clone — FORMATS.md §4 rule 4, the case fixtures/files/FINDINGS.md added to §3.3." },
+    { "name": "sy-dynamo", "marketplace": "synthetic-official", "version": "0.9.7",   "enabled": true, "orphanVersions": ["0.9.6"] },
+    { "name": "sy-ember",  "marketplace": "synthetic-official", "version": "4.0.0",   "enabled": true, "orphanVersions": ["3.9.2"] },
+    { "name": "sy-forge",  "marketplace": "synthetic-official", "version": "1.2.3",   "enabled": true, "mcpServers": ["forge-index", "forge-search"] },
+    { "name": "sy-grove",  "marketplace": "synthetic-official", "version": "0.1.0",   "enabled": true },
+    { "name": "sy-harbor", "marketplace": "synthetic-official", "version": "5.5.5",   "enabled": true, "orphanVersions": ["5.5.4"] },
+
+    { "name": "sy-ion",    "marketplace": "synthetic-alpha", "version": "1.1.0", "enabled": true },
+    { "name": "sy-jade",   "marketplace": "synthetic-alpha", "version": "2.0.0", "enabled": true, "scopes": ["user", "project"],
+      "__quirk": "TWO elements in its installed_plugins.json array, one per scope. FORMATS.md §0 trap #12: reading [0] silently drops scopes. A single-element array lets [0] pass; this one does not." },
+    { "name": "sy-kite",   "marketplace": "synthetic-alpha", "version": "0.4.2", "enabled": true, "mcpServers": ["kite-bridge"] },
+    { "name": "sy-lumen",  "marketplace": "synthetic-alpha", "version": "3.3.0", "enabled": true, "skills": ["sy-lumen-trace", "sy-lumen-diff"] },
+    { "name": "sy-mesa",   "marketplace": "synthetic-alpha", "version": "1.0.1", "enabled": true, "orphanVersions": ["1.0.0"] },
+
+    { "name": "sy-nimbus", "marketplace": "synthetic-bravo", "version": "2.2.2", "enabled": true },
+    { "name": "sy-onyx",   "marketplace": "synthetic-bravo", "version": "1.4.0", "enabled": true, "mcpServers": ["onyx-graph"] },
+    { "name": "sy-prism",  "marketplace": "synthetic-bravo", "version": "0.8.0", "enabled": true, "skills": ["sy-prism-lint", "sy-prism-fmt"] },
+    { "name": "sy-quartz", "marketplace": "synthetic-bravo", "version": "6.1.0", "enabled": true, "orphanVersions": ["6.0.9"] },
+
+    { "name": "sy-ridge",  "marketplace": "synthetic-charlie", "version": "1.0.0", "enabled": true },
+    { "name": "sy-slate",  "marketplace": "synthetic-charlie", "version": "2.5.0", "enabled": true, "marketplaceEntryVersion": "2.4.0",
+      "__quirk": "DOUBLE DECLARATION with a real divergence: plugin.json says 2.5.0, the marketplace entry says 2.4.0, plugin.json wins. Mirrors the live ui-ux-pro-max case (2.5.0 vs 2.2.1). Feeds T2.5." },
+    { "name": "sy-tundra", "marketplace": "synthetic-charlie", "version": "0.2.0", "enabled": true, "orphanVersions": ["0.1.9"] },
+
+    { "name": "sy-umber",  "marketplace": "synthetic-delta", "version": "3.0.0", "enabled": true, "marketplaceEntryVersion": "3.0.0",
+      "__quirk": "FALSE-POSITIVE GUARD for T2.5: double-declared, both 3.0.0. Must NOT be flagged. Mirrors everything-claude-code (1.9.0 / 1.9.0)." },
+    { "name": "sy-vertex", "marketplace": "synthetic-delta", "version": "1.7.4", "enabled": true },
+
+    { "name": "sy-willow", "marketplace": "synthetic-echo", "version": "0.6.0", "enabled": true },
+    { "name": "sy-xenon",  "marketplace": "synthetic-echo", "version": "9.0.0", "enabled": false,
+      "__quirk": "enabledPlugins says FALSE — installed but disabled. settings.json.enabledPlugins is the ONLY home of the enabled bit (FORMATS.md §2), so this is the only way the state is observable." }
+  ],
+
+  "userScopeMcpServers": [
+    { "name": "sy-mcp-files",    "type": "stdio", "package": "@synthetic/server-files" },
+    { "name": "sy-mcp-memory",   "type": "stdio", "package": "@synthetic/server-memory" },
+    { "name": "sy-mcp-search",   "type": "stdio", "package": "@synthetic/server-search" },
+    { "name": "sy-mcp-shell",    "type": "stdio", "package": "@synthetic/server-shell" },
+    { "name": "sy-mcp-sql",      "type": "stdio", "package": "@synthetic/server-sql" },
+    { "name": "sy-mcp-tickets",  "type": "stdio", "package": "@synthetic/server-tickets" },
+    { "name": "sy-mcp-docs",     "type": "http",  "url": "https://docs.example.invalid/mcp" },
+    { "name": "sy-mcp-metrics",  "type": "http",  "url": "https://metrics.example.invalid/mcp" }
+  ],
+
+  "projectScopeMcpServers": [
+    { "project": 0, "name": "sy-mcp-project-ci",   "type": "stdio", "package": "@synthetic/server-ci" },
+    { "project": 3, "name": "sy-mcp-project-repo", "type": "stdio", "package": "@synthetic/server-repo" }
+  ],
+
+  "projectKeys": [
+    "C:\\synthetic\\projects\\alpha",
+    "C:/synthetic/projects/alpha",
+    "C:\\synthetic\\projects\\bravo",
+    "C:/synthetic/projects/charlie",
+    "C:/synthetic/projects/delta",
+    "E:\\synthetic\\projects\\echo",
+    "E:/synthetic/projects/echo",
+    "E:/synthetic/projects/foxtrot",
+    "C:/synthetic/projects/golf",
+    "C:\\synthetic\\projects\\hotel",
+    "C:/synthetic/projects/india",
+    "C:/Synthetic/Projects/India"
+  ],
+  "__projectKeysNote": "12 keys, used VERBATIM as JSON object keys — 5 backslash, 7 forward-slash, two drive letters (C: and E:), and THREE colliding pairs once lowercased and separator-normalised: alpha (rows 0/1, separator), echo (rows 5/6, separator), india (rows 10/11, case). FORMATS.md §0 trap #13 observed 10 collisions across 102 keys; this reproduces the phenomenon at fixture scale for T1.3 / T1.25 / T1.28. The tree does NOT create these directories — the real ~/.claude.json also names projects that no longer exist, which is T1.27's orphaned-project finding."
+}

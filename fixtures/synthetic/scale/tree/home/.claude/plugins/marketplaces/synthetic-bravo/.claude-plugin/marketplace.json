@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-bravo",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-bravo.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-nimbus",
+      "description": "SYNTHETIC FIXTURE — sy-nimbus.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-nimbus.git",
+        "sha": "8f35c698a484eb31540f54075a9f3c21e3754f7f"
+      }
+    },
+    {
+      "name": "sy-onyx",
+      "description": "SYNTHETIC FIXTURE — sy-onyx.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-onyx"
+      }
+    },
+    {
+      "name": "sy-prism",
+      "description": "SYNTHETIC FIXTURE — sy-prism.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-prism",
+        "sha": "d9c75c4b19877ff7553e5dab28fab0e249131b29"
+      }
+    },
+    {
+      "name": "sy-quartz",
+      "description": "SYNTHETIC FIXTURE — sy-quartz.",
+      "source": "./plugins/sy-quartz"
+    }
+  ]
+}

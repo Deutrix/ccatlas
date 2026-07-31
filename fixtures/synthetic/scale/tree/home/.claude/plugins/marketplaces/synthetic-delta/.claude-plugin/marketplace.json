@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-marketplace.json",
+  "name": "synthetic-delta",
+  "description": "SYNTHETIC FIXTURE — generated marketplace synthetic-delta.",
+  "owner": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "metadata": {
+    "description": "Synthetic fixture marketplace",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "sy-umber",
+      "description": "SYNTHETIC FIXTURE — sy-umber.",
+      "source": {
+        "source": "url",
+        "url": "https://example.invalid/sy-umber.git",
+        "sha": "a6c97f631676293fc0f1b56cab9f603adee3d9a6"
+      },
+      "version": "3.0.0"
+    },
+    {
+      "name": "sy-vertex",
+      "description": "SYNTHETIC FIXTURE — sy-vertex.",
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/sy-vertex"
+      }
+    }
+  ]
+}

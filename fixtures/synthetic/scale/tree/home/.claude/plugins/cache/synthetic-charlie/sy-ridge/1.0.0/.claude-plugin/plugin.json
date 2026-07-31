@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sy-ridge",
+  "description": "SYNTHETIC FIXTURE — generated plugin sy-ridge. Reference-scale tree for the T1.11 perf gate. Not a real plugin.",
+  "author": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "homepage": "https://example.invalid/sy-ridge",
+  "license": "MIT",
+  "keywords": [
+    "synthetic",
+    "fixture",
+    "ccatlas"
+  ],
+  "version": "1.0.0"
+}

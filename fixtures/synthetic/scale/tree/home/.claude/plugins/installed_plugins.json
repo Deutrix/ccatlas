@@ -1,0 +1,262 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/tasks.md \"Reference machine baseline\" — 4 marketplaces / 5 plugins locally vs T1.11 floors of >=5 / >=20",
+    "unblocks": [
+      "T1.11",
+      "T1.15"
+    ],
+    "generatedBy": "node fixtures/synthetic/generate.mjs build",
+    "source": "fixtures/synthetic/scale/seed.json"
+  },
+  "version": 2,
+  "plugins": {
+    "sy-atlas@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-atlas\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-01T00:00:00.000Z",
+        "lastUpdated": "2026-01-31T00:00:00.000Z",
+        "gitCommitSha": "97cee08e187770f63cdbb28d966684e73aa28386"
+      }
+    ],
+    "sy-beacon@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-beacon\\2.3.1",
+        "version": "2.3.1",
+        "installedAt": "2026-01-02T00:00:00.000Z",
+        "lastUpdated": "2026-02-01T00:00:00.000Z",
+        "gitCommitSha": "1ffdf49a8097b22512a2f69aee7cb83ed616637a"
+      }
+    ],
+    "sy-cinder@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-cinder\\unknown",
+        "version": "unknown",
+        "installedAt": "2026-01-03T00:00:00.000Z",
+        "lastUpdated": "2026-02-02T00:00:00.000Z"
+      }
+    ],
+    "sy-dynamo@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-dynamo\\0.9.7",
+        "version": "0.9.7",
+        "installedAt": "2026-01-04T00:00:00.000Z",
+        "lastUpdated": "2026-02-03T00:00:00.000Z",
+        "gitCommitSha": "fcdfb65c854465267dd64e0156affdbb0aad7709"
+      }
+    ],
+    "sy-ember@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-ember\\4.0.0",
+        "version": "4.0.0",
+        "installedAt": "2026-01-05T00:00:00.000Z",
+        "lastUpdated": "2026-02-04T00:00:00.000Z",
+        "gitCommitSha": "5fa43ffff5027f0a098d5027d851679123e035c2"
+      }
+    ],
+    "sy-forge@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-forge\\1.2.3",
+        "version": "1.2.3",
+        "installedAt": "2026-01-06T00:00:00.000Z",
+        "lastUpdated": "2026-02-05T00:00:00.000Z",
+        "gitCommitSha": "fc6b7e9408ed606db4208d72bc82b1682877c81a"
+      }
+    ],
+    "sy-grove@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-grove\\0.1.0",
+        "version": "0.1.0",
+        "installedAt": "2026-01-07T00:00:00.000Z",
+        "lastUpdated": "2026-02-06T00:00:00.000Z",
+        "gitCommitSha": "724251daaaad66135ed53149dbf9244a7bf87cfe"
+      }
+    ],
+    "sy-harbor@synthetic-official": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-official\\sy-harbor\\5.5.5",
+        "version": "5.5.5",
+        "installedAt": "2026-01-08T00:00:00.000Z",
+        "lastUpdated": "2026-02-07T00:00:00.000Z",
+        "gitCommitSha": "d2b99b10b3eb317ad074556e75d05f5ecb9b2dad"
+      }
+    ],
+    "sy-ion@synthetic-alpha": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-ion\\1.1.0",
+        "version": "1.1.0",
+        "installedAt": "2026-01-09T00:00:00.000Z",
+        "lastUpdated": "2026-02-08T00:00:00.000Z",
+        "gitCommitSha": "5cdf86c6f3ff89cc76a38a2f5bcb351bed771657"
+      }
+    ],
+    "sy-jade@synthetic-alpha": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-jade\\2.0.0",
+        "version": "2.0.0",
+        "installedAt": "2026-01-10T00:00:00.000Z",
+        "lastUpdated": "2026-02-09T00:00:00.000Z",
+        "gitCommitSha": "09d6bb7e4e1306b7c66a4b230cdb970ee62b3b47"
+      },
+      {
+        "scope": "project",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-jade\\2.0.0",
+        "version": "2.0.0",
+        "installedAt": "2026-01-10T00:00:00.000Z",
+        "lastUpdated": "2026-02-09T00:00:00.000Z",
+        "gitCommitSha": "5bcf1ccfe9fe63d097c4d7e08079fcecce542ca2"
+      }
+    ],
+    "sy-kite@synthetic-alpha": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-kite\\0.4.2",
+        "version": "0.4.2",
+        "installedAt": "2026-01-11T00:00:00.000Z",
+        "lastUpdated": "2026-02-10T00:00:00.000Z",
+        "gitCommitSha": "9df77ddf0824b5bc7a1914f5c40ad3e317404189"
+      }
+    ],
+    "sy-lumen@synthetic-alpha": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-lumen\\3.3.0",
+        "version": "3.3.0",
+        "installedAt": "2026-01-12T00:00:00.000Z",
+        "lastUpdated": "2026-02-11T00:00:00.000Z",
+        "gitCommitSha": "4c4832ccd17081bdd13d26ed66236f0d05fd4fa7"
+      }
+    ],
+    "sy-mesa@synthetic-alpha": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-alpha\\sy-mesa\\1.0.1",
+        "version": "1.0.1",
+        "installedAt": "2026-01-13T00:00:00.000Z",
+        "lastUpdated": "2026-02-12T00:00:00.000Z",
+        "gitCommitSha": "7bd84b2dfac87a9bd118dc866b0ca2a5dccb1fa5"
+      }
+    ],
+    "sy-nimbus@synthetic-bravo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-bravo\\sy-nimbus\\2.2.2",
+        "version": "2.2.2",
+        "installedAt": "2026-01-14T00:00:00.000Z",
+        "lastUpdated": "2026-02-13T00:00:00.000Z",
+        "gitCommitSha": "52a40e6dd2446b8e86118b5f9a49cdb37a1c1b04"
+      }
+    ],
+    "sy-onyx@synthetic-bravo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-bravo\\sy-onyx\\1.4.0",
+        "version": "1.4.0",
+        "installedAt": "2026-01-15T00:00:00.000Z",
+        "lastUpdated": "2026-02-14T00:00:00.000Z",
+        "gitCommitSha": "d059e15b67c2d03f093d729f406c9e35d38ed8c6"
+      }
+    ],
+    "sy-prism@synthetic-bravo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-bravo\\sy-prism\\0.8.0",
+        "version": "0.8.0",
+        "installedAt": "2026-01-16T00:00:00.000Z",
+        "lastUpdated": "2026-02-15T00:00:00.000Z",
+        "gitCommitSha": "870a84cd137de267183fc48d9ce46dc11e0b4f62"
+      }
+    ],
+    "sy-quartz@synthetic-bravo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-bravo\\sy-quartz\\6.1.0",
+        "version": "6.1.0",
+        "installedAt": "2026-01-17T00:00:00.000Z",
+        "lastUpdated": "2026-02-16T00:00:00.000Z",
+        "gitCommitSha": "fb20a8798b427f8e6bea65a9869554acba86561c"
+      }
+    ],
+    "sy-ridge@synthetic-charlie": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-charlie\\sy-ridge\\1.0.0",
+        "version": "1.0.0",
+        "installedAt": "2026-01-18T00:00:00.000Z",
+        "lastUpdated": "2026-02-17T00:00:00.000Z",
+        "gitCommitSha": "07b1581c86ee00ad98fbbeabba4884ed2a8e3046"
+      }
+    ],
+    "sy-slate@synthetic-charlie": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-charlie\\sy-slate\\2.5.0",
+        "version": "2.5.0",
+        "installedAt": "2026-01-19T00:00:00.000Z",
+        "lastUpdated": "2026-02-18T00:00:00.000Z",
+        "gitCommitSha": "5ce0e670e97ac31046ef65275518b7543d36b52a"
+      }
+    ],
+    "sy-tundra@synthetic-charlie": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-charlie\\sy-tundra\\0.2.0",
+        "version": "0.2.0",
+        "installedAt": "2026-01-20T00:00:00.000Z",
+        "lastUpdated": "2026-02-19T00:00:00.000Z",
+        "gitCommitSha": "db26119d645ff4d027457504aa9c2ed707cf5884"
+      }
+    ],
+    "sy-umber@synthetic-delta": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-delta\\sy-umber\\3.0.0",
+        "version": "3.0.0",
+        "installedAt": "2026-01-21T00:00:00.000Z",
+        "lastUpdated": "2026-02-20T00:00:00.000Z",
+        "gitCommitSha": "ebcabc2c8dd050dda4b85ab8483850492bf33aad"
+      }
+    ],
+    "sy-vertex@synthetic-delta": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-delta\\sy-vertex\\1.7.4",
+        "version": "1.7.4",
+        "installedAt": "2026-01-22T00:00:00.000Z",
+        "lastUpdated": "2026-02-21T00:00:00.000Z",
+        "gitCommitSha": "0f44f820a8a7cf69c8db739d743c19b1ee098d3d"
+      }
+    ],
+    "sy-willow@synthetic-echo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-echo\\sy-willow\\0.6.0",
+        "version": "0.6.0",
+        "installedAt": "2026-01-23T00:00:00.000Z",
+        "lastUpdated": "2026-02-22T00:00:00.000Z",
+        "gitCommitSha": "437efecd041a7db10aab3c049f2458eb0cd3956d"
+      }
+    ],
+    "sy-xenon@synthetic-echo": [
+      {
+        "scope": "user",
+        "installPath": "<TREE_ROOT>\\home\\.claude\\plugins\\cache\\synthetic-echo\\sy-xenon\\9.0.0",
+        "version": "9.0.0",
+        "installedAt": "2026-01-24T00:00:00.000Z",
+        "lastUpdated": "2026-02-23T00:00:00.000Z",
+        "gitCommitSha": "d0d02455a6c5123aeddf3ba2338351bf505f8b17"
+      }
+    ]
+  }
+}

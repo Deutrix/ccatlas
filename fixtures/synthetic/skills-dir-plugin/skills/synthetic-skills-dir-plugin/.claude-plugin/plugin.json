@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "synthetic-skills-dir-plugin",
+  "displayName": "Synthetic @skills-dir plugin (FIXTURE)",
+  "version": "0.3.1",
+  "description": "SYNTHETIC FIXTURE — not a real plugin. A minimal @skills-dir plugin: a directory under ~/.claude/skills/ that carries its own .claude-plugin/plugin.json. Exists so T1.4 detection has something to match. Installed via no marketplace; absent from installed_plugins.json and from enabledPlugins.",
+  "author": { "name": "ccatlas synthetic fixture" },
+  "homepage": "https://example.invalid/ccatlas/synthetic-skills-dir-plugin",
+  "license": "MIT",
+  "keywords": ["synthetic", "fixture", "ccatlas", "skills-dir"],
+  "skills": ["./skills/"],
+  "agents": ["./agents/synthetic-reviewer.md"],
+  "commands": ["./commands/"]
+}

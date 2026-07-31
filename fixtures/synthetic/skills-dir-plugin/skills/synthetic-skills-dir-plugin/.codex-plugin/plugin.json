@@ -1,0 +1,11 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §0 trap #14 — sibling foreign-tool manifests",
+    "unblocks": ["T1.4"],
+    "role": "DECOY. Not a Claude Code manifest. Must never be counted."
+  },
+  "name": "synthetic-skills-dir-plugin",
+  "version": "0.3.1",
+  "description": "SYNTHETIC DECOY — second foreign-tool manifest."
+}

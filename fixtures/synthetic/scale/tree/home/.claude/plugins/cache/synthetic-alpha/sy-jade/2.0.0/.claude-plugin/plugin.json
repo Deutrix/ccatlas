@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "sy-jade",
+  "description": "SYNTHETIC FIXTURE — generated plugin sy-jade. Reference-scale tree for the T1.11 perf gate. Not a real plugin.",
+  "author": {
+    "name": "ccatlas synthetic fixture"
+  },
+  "homepage": "https://example.invalid/sy-jade",
+  "license": "MIT",
+  "keywords": [
+    "synthetic",
+    "fixture",
+    "ccatlas"
+  ],
+  "version": "2.0.0"
+}

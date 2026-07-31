@@ -1,0 +1,50 @@
+{
+  "synthetic-official": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-official"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-official",
+    "lastUpdated": "2026-01-01T00:00:00.000Z"
+  },
+  "synthetic-alpha": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-alpha"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-alpha",
+    "lastUpdated": "2026-01-04T00:00:00.000Z"
+  },
+  "synthetic-bravo": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-bravo"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-bravo",
+    "lastUpdated": "2026-01-18T00:00:00.000Z"
+  },
+  "synthetic-charlie": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-charlie"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-charlie",
+    "lastUpdated": "2026-03-03T00:00:00.000Z"
+  },
+  "synthetic-delta": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-delta"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-delta",
+    "lastUpdated": "2026-05-09T00:00:00.000Z"
+  },
+  "synthetic-echo": {
+    "source": {
+      "source": "github",
+      "repo": "synthetic-org/synthetic-echo"
+    },
+    "installLocation": "<TREE_ROOT>\\home\\.claude\\plugins\\marketplaces\\synthetic-echo",
+    "lastUpdated": "2026-07-30T00:00:00.000Z"
+  }
+}

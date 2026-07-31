@@ -1,0 +1,232 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "Reference scale (>=8 MCP servers) + FORMATS.md §0 trap #13 (colliding project keys)",
+    "unblocks": [
+      "T1.11",
+      "T1.3",
+      "T1.25"
+    ],
+    "note": "A FRAGMENT of ~/.claude.json — the real file is ~193 KB / 95 top-level keys and must never be read wholesale."
+  },
+  "autoUpdates": true,
+  "officialMarketplaceAutoInstalled": true,
+  "mcpServers": {
+    "sy-mcp-files": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-files"
+      ],
+      "env": {}
+    },
+    "sy-mcp-memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-memory"
+      ],
+      "env": {}
+    },
+    "sy-mcp-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-search"
+      ],
+      "env": {}
+    },
+    "sy-mcp-shell": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-shell"
+      ],
+      "env": {}
+    },
+    "sy-mcp-sql": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-sql"
+      ],
+      "env": {}
+    },
+    "sy-mcp-tickets": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@synthetic/server-tickets"
+      ],
+      "env": {}
+    },
+    "sy-mcp-docs": {
+      "type": "http",
+      "url": "https://docs.example.invalid/mcp"
+    },
+    "sy-mcp-metrics": {
+      "type": "http",
+      "url": "https://metrics.example.invalid/mcp"
+    }
+  },
+  "projects": {
+    "C:\\synthetic\\projects\\alpha": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {
+        "sy-mcp-project-ci": {
+          "type": "stdio",
+          "command": "npx",
+          "args": [
+            "-y",
+            "@synthetic/server-ci"
+          ],
+          "env": {}
+        }
+      },
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/synthetic/projects/alpha": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:\\synthetic\\projects\\bravo": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/synthetic/projects/charlie": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {
+        "sy-mcp-project-repo": {
+          "type": "stdio",
+          "command": "npx",
+          "args": [
+            "-y",
+            "@synthetic/server-repo"
+          ],
+          "env": {}
+        }
+      },
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/synthetic/projects/delta": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "E:\\synthetic\\projects\\echo": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "E:/synthetic/projects/echo": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "E:/synthetic/projects/foxtrot": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/synthetic/projects/golf": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:\\synthetic\\projects\\hotel": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/synthetic/projects/india": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    },
+    "C:/Synthetic/Projects/India": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": true,
+      "projectOnboardingSeenCount": 1,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false
+    }
+  }
+}

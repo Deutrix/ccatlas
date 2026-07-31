@@ -1,0 +1,77 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 — \"No project-scope .claude/settings.json, no local-scope plugin keys, pluginConfigs absent\"",
+    "unblocks": ["T1.2"],
+    "scope": "user",
+    "standsInFor": "~/.claude/settings.json",
+    "oracle": "./expected-precedence.json",
+    "warning": "SYNTHETIC FIXTURE. Not captured from any machine. Never treat as a regression baseline for shape discovery — fixtures/files/settings-shape.json is the real capture."
+  },
+  "__shapeCaveats": {
+    "enabledPlugins": "OBSERVED — Record<\"<plugin>@<marketplace>\", boolean>, fixtures/files/settings-shape.json",
+    "extraKnownMarketplaces": "OBSERVED — Record<name, {source:{source, repo?|url?|path?|ref?}}>, fixtures/files/settings-shape.json",
+    "env": "OBSERVED — Record<string,string> (key names only were captured; values were redacted)",
+    "permissions": "OBSERVED (partially) — {allow?, deny?, ask?, additionalDirectories?, defaultMode?}; only `allow` and `deny` were seen populated on the reference machine",
+    "pluginConfigs": "UNVERIFIED — absent on the reference machine. The nesting below (Record<\"<plugin>@<marketplace>\", Record<optionName, value>>) is INFERRED from docs/02-architecture.md §4.2 `userConfig` + `${user_config.*}`, not observed. See ./README.md §'pluginConfigs shape is inferred'."
+  },
+
+  "enabledPlugins": {
+    "alpha@synthetic-market": true,
+    "bravo@synthetic-market": true,
+    "charlie@synthetic-market": true,
+    "delta@synthetic-market": true,
+    "golf@synthetic-market": false
+  },
+
+  "extraKnownMarketplaces": {
+    "synthetic-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/USER-SCOPE-LOSES"
+      }
+    },
+    "other-synthetic-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/USER-SCOPE-LOSES"
+      }
+    },
+    "user-only-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/user-only-market"
+      }
+    }
+  },
+
+  "pluginConfigs": {
+    "alpha@synthetic-market": {
+      "sync_repo": "https://example.invalid/synthetic/user-scope-WINS.git",
+      "session_drift_check": true
+    },
+    "bravo@synthetic-market": {
+      "threshold": 100
+    }
+  },
+
+  "env": {
+    "CCATLAS_SYNTHETIC_SCOPE_WINNER": "user",
+    "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT": "user",
+    "CCATLAS_SYNTHETIC_PROJECT_OVER_USER": "user",
+    "CCATLAS_SYNTHETIC_USER_ONLY": "user"
+  },
+
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(echo synthetic-user:*)",
+      "Bash(curl:*)",
+      "Read(//synthetic/shared/**)"
+    ],
+    "additionalDirectories": ["/synthetic/user-extra-dir"]
+  },
+
+  "alwaysThinkingEnabled": true,
+  "theme": "dark"
+}

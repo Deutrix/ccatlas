@@ -1,0 +1,56 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 — \"No project-scope .claude/settings.json\" (T0.5 confirmed it is ABSENT in the ccatlas repo, so project precedence is untestable on the reference machine)",
+    "unblocks": ["T1.2"],
+    "scope": "project",
+    "standsInFor": "<repo>/.claude/settings.json",
+    "oracle": "./expected-precedence.json",
+    "warning": "SYNTHETIC FIXTURE. No project-scope settings.json was ever captured — this file is constructed, not observed. Its KEY SET mirrors the observed user-scope file; its VALUES are chosen to make precedence decidable."
+  },
+
+  "enabledPlugins": {
+    "alpha@synthetic-market": false,
+    "bravo@synthetic-market": true,
+    "charlie@synthetic-market": false,
+    "echo@other-synthetic-market": true
+  },
+
+  "extraKnownMarketplaces": {
+    "synthetic-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/PROJECT-SCOPE-WINS"
+      }
+    },
+    "other-synthetic-market": {
+      "source": {
+        "source": "github",
+        "repo": "synthetic-org/PROJECT-SCOPE-LOSES-TO-MANAGED"
+      }
+    }
+  },
+
+  "pluginConfigs": {
+    "alpha@synthetic-market": {
+      "sync_repo": "https://example.invalid/synthetic/PROJECT-MUST-BE-IGNORED.git"
+    },
+    "charlie@synthetic-market": {
+      "sync_repo": "https://example.invalid/synthetic/PROJECT-MUST-BE-IGNORED.git"
+    }
+  },
+
+  "env": {
+    "CCATLAS_SYNTHETIC_SCOPE_WINNER": "project",
+    "CCATLAS_SYNTHETIC_LOCAL_OVER_PROJECT": "project",
+    "CCATLAS_SYNTHETIC_PROJECT_OVER_USER": "project"
+  },
+
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(echo synthetic-project:*)"
+    ],
+    "additionalDirectories": ["/synthetic/project-extra-dir"]
+  }
+}

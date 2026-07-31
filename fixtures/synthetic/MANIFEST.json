@@ -1,0 +1,161 @@
+{
+  "__synthetic": true,
+  "__models": {
+    "gap": "docs/FORMATS.md §5 'Known gaps' — the four gaps this directory fills",
+    "unblocks": ["T1.2", "T1.4", "T1.11", "T1.16"],
+    "role": "The index of every synthetic file. Files whose format cannot carry an inline `__synthetic` marker are listed here instead — see `markerPolicy`."
+  },
+
+  "task": "T1.29 — synthetic fixture corpus",
+  "authored": "2026-07-31",
+  "claudeCodeStamp": "CLI 2.1.220 — the corpus these fixtures are shaped against",
+
+  "warning": "NOTHING IN THIS DIRECTORY WAS CAPTURED FROM A MACHINE. fixtures/cli/, fixtures/files/ and fixtures/transcripts/ are real output and are the regression baseline (TX.2). fixtures/synthetic/ is constructed, and exists only to exercise behaviour the reference machine cannot witness. Never diff a synthetic fixture against live output; never cite one as evidence of a format.",
+
+  "markerPolicy": {
+    "inline": "Every file whose format tolerates unknown keys carries `__synthetic: true` and `__models` at the top level. That is all the settings-shaped JSON, all the oracles, seed.json, and the three foreign-tool decoy manifests.",
+    "enforced": "Check V10 of `generate.mjs verify` asserts that every .json under fixtures/synthetic/ either carries BOTH `__synthetic: true` and `__models`, or matches one of the exemption patterns below. The exemptions are code (generate.mjs → MARKER_EXEMPT), not just prose, so this list cannot quietly grow.",
+    "byIndex": "Five kinds of file cannot carry the marker and are identified HERE and in their subtree README instead:",
+    "byIndexCases": [
+      {
+        "path": "**/.claude-plugin/plugin.json — including all 30 in scale/tree/ and the @skills-dir one",
+        "why": "VERIFIED against the live CLI: `claude plugin validate . --strict` passes on the @skills-dir manifest as written, and adding `__synthetic`/`__models` produces two 'Unknown field: … Claude Code ignores it at load time' warnings, which --strict promotes to errors (exit 1). A marker would make these fixtures fail the very gate T1.18 and CI run. They self-identify through name/description/keywords — every generated description begins 'SYNTHETIC FIXTURE —'."
+      },
+      {
+        "path": "**/.claude-plugin/marketplace.json — all 6 in scale/tree/",
+        "why": "Same manifest-validation exposure as plugin.json. Every entry's description begins 'SYNTHETIC FIXTURE —' and every name is `synthetic-*` / `sy-*`."
+      },
+      {
+        "path": "scale/tree/home/.claude/plugins/known_marketplaces.json",
+        "why": "A BARE Record<name, entry> at the top level — a `__synthetic` key would read as a marketplace literally named `__synthetic`. Adding it would corrupt the very shape the fixture models. All six entries are named `synthetic-*`."
+      },
+      {
+        "path": "**/SKILL.md, **/*.md agents and commands",
+        "why": "YAML frontmatter with a fixed key set. Every one says SYNTHETIC FIXTURE in its `description`."
+      },
+      {
+        "path": "scale/tree/home/.claude/plugins/marketplaces/synthetic-official/.gcs-sha · scale/tree/home/.claude/plugins/.last_inuse_sweep · scale/tree/home/.claude/plugins/cache/**/.in_use/<pid>",
+        "why": "Bare single-value files (a 40-hex SHA, an ISO timestamp) and per-process lock files whose content is a fixed one- or two-key JSON object observed live. No room for a marker without misrepresenting the shape."
+      }
+    ],
+    "decoysDoCarryMarkers": "The four foreign-tool and misplaced manifests under skills-dir-plugin/ (.cursor-plugin/, .codex-plugin/, .kimi-plugin/, and the directory-root plugin.json) DO carry inline markers and are NOT exempt — Claude Code never loads them, so nothing validates them. Their `__models.role` says DECOY."
+  },
+
+  "gaps": [
+    {
+      "gap": "No project-scope .claude/settings.json, no local-scope plugin keys, pluginConfigs absent — 4-scope precedence is untestable",
+      "formatsRef": "docs/FORMATS.md §5 row 3",
+      "unblocks": ["T1.2"],
+      "alsoFeeds": ["T1.7"],
+      "directory": "precedence/",
+      "oracle": "precedence/expected-precedence.json",
+      "files": [
+        "precedence/README.md",
+        "precedence/user-settings.json",
+        "precedence/project-settings.json",
+        "precedence/local-settings.json",
+        "precedence/managed-settings.json",
+        "precedence/expected-precedence.json"
+      ],
+      "openQuestions": [
+        "Merge granularity (per-key merge vs scope replacement) is UNWITNESSED. The oracle labels every affected assertion MODEL-DEPENDENT and ships entries that discriminate the two models rather than picking one.",
+        "The managed-settings file PATH is recorded nowhere in docs/. The fixture is path-agnostic.",
+        "pluginConfigs NESTING is inferred from docs/02-architecture.md §4.2, not observed. Its PRECEDENCE RULE is documented (line 158) and is what the fixture really tests."
+      ]
+    },
+    {
+      "gap": "No @skills-dir plugin exists locally",
+      "formatsRef": "docs/FORMATS.md §5 row 1",
+      "unblocks": ["T1.4"],
+      "alsoFeeds": ["T1.6", "T1.7"],
+      "directory": "skills-dir-plugin/",
+      "oracle": "skills-dir-plugin/expected-detection.json",
+      "files": [
+        "skills-dir-plugin/README.md",
+        "skills-dir-plugin/expected-detection.json",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/.claude-plugin/plugin.json",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/.cursor-plugin/plugin.json",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/.codex-plugin/plugin.json",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/.kimi-plugin/plugin.json",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/skills/synthetic-alpha-skill/SKILL.md",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/skills/synthetic-bravo-skill/SKILL.md",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/agents/synthetic-reviewer.md",
+        "skills-dir-plugin/skills/synthetic-skills-dir-plugin/commands/synthetic-report.md",
+        "skills-dir-plugin/skills/synthetic-bravo-skill/SKILL.md",
+        "skills-dir-plugin/skills/synthetic-decoy-only/SKILL.md",
+        "skills-dir-plugin/skills/synthetic-decoy-only/.cursor-plugin/plugin.json",
+        "skills-dir-plugin/skills/synthetic-misplaced-manifest/SKILL.md",
+        "skills-dir-plugin/skills/synthetic-misplaced-manifest/plugin.json"
+      ],
+      "openQuestions": [
+        "The canonical id form for a @skills-dir plugin (`<name>@skills-dir`? bare? `@local`?) is NOT invented here — the oracle asserts `origin: \"skills-dir\"` and leaves the id to T1.6."
+      ]
+    },
+    {
+      "gap": "Every env object is empty across all scopes — no positive secret fixture",
+      "formatsRef": "docs/FORMATS.md §5 row 4",
+      "unblocks": ["T1.16"],
+      "alsoFeeds": ["T5.5", "T5.6", "T5.7"],
+      "directory": "secrets/",
+      "oracle": "secrets/expected-findings.json",
+      "readMeFirst": "SECRETS-README.md",
+      "files": [
+        "SECRETS-README.md",
+        "secrets/mcp-json-with-credentials.json",
+        "secrets/claude-json-mcp-fragment.json",
+        "secrets/settings-env-with-credentials.json",
+        "secrets/negative-cases.json",
+        "secrets/expected-findings.json",
+        "secrets/entropy-report.json"
+      ],
+      "sentinel": "SYNTHETIC — present in every credential-shaped value, enforced by check V9 across the whole directory",
+      "counts": { "expectedFindings": 17, "expectedNonFindings": 15 }
+    },
+    {
+      "gap": "Only 4 marketplaces / 5 plugins — T1.11 📏 perf gates cannot be certified",
+      "formatsRef": "docs/FORMATS.md §5 row 7; docs/tasks.md 'Reference machine baseline'",
+      "unblocks": ["T1.11"],
+      "alsoFeeds": ["T1.3", "T1.15", "T1.25", "T1.27", "T2.5"],
+      "directory": "scale/",
+      "files": ["scale/README.md", "scale/seed.json", "scale/tree/ (140 generated files)"],
+      "generator": "generate.mjs",
+      "scale": { "marketplaces": 6, "plugins": 24, "skills": 46, "mcpServers": 14, "cacheVersionDirs": 30, "files": 140 },
+      "floors": { "marketplaces": 5, "plugins": 20, "skills": 30, "mcpServers": 8 },
+      "caveat": "mtimes do NOT survive git. `.in_use` mtime is the liveness signal, so any test depending on it must run `build` or `materialize` first. See scale/README.md."
+    }
+  ],
+
+  "tooling": [
+    { "path": "generate.mjs", "role": "CLI — build | verify | materialize <dir>. Zero dependencies, node:* only." },
+    { "path": "lib/tree.mjs", "role": "Pure deterministic tree construction: buildTree(seed) -> Map<relPath, content>." },
+    { "path": "lib/entropy.mjs", "role": "Shannon entropy, JSON string walker, and the over-eager credential-shape regex used to police the sentinel invariant." }
+  ],
+
+  "verify": {
+    "command": "node fixtures/synthetic/generate.mjs verify",
+    "checks": {
+      "V1": "scale/tree/ regenerates byte-identically from seed.json",
+      "V2": "installed_plugins.json and enabledPlugins agree, both directions",
+      "V3": "every installPath resolves to a directory holding .claude-plugin/plugin.json",
+      "V4": "every marketplace named in a plugin key exists in known_marketplaces.json and has a clone manifest",
+      "V5": "every .in_use under cache/ is a DIRECTORY",
+      "V6": "the tree meets every reference-scale floor",
+      "V7": "orphan cache directories are present and unreferenced",
+      "V8": "every entropy figure quoted in secrets/*.json matches recomputation",
+      "V9": "every credential-shaped string anywhere under fixtures/synthetic/ carries the SYNTHETIC sentinel",
+      "V10": "every .json carries `__synthetic` + `__models`, or matches a markerPolicy exemption pattern",
+      "V11": "the precedence golden re-derives from its four settings files, and every expectations[].definedAt matches the scopes that actually define that entry",
+      "V12": "the @skills-dir counts hold: 6 files named plugin.json under skills/, exactly 1 a Claude Code manifest, 3 personal directories"
+    },
+    "lastRun": { "date": "2026-07-31", "result": "all 12 checks passed", "filesScanned": 175, "treeFiles": 140, "entropyFigures": "24 positive + 15 negative" }
+  },
+
+  "notBuilt": [
+    { "what": "≥10 third-party marketplaces for T2.11", "why": "Explicitly out of scope — Phase 2." },
+    { "what": "Synthetic transcripts", "why": "Explicitly out of scope — the real corpus is 384 files / 276,870 records and is sufficient." },
+    { "what": "`plugin details` cost output for any synthetic plugin", "why": "The estimator has three regimes ~40% apart (FORMATS.md §0 trap #3). Fabricated figures would certify T4.7/T4.8 against invented numbers. Measure live with `claude --plugin-dir <path> plugin details <name>`." },
+    { "what": "The {source, url, path, ref, sha} marketplace source variant", "why": "Key set observed; the literal value of its `source` discriminator was never captured. See scale/README.md → 'Shapes deliberately NOT reproduced'. FORMATS.md §5 'Non-github marketplace source types' REMAINS OPEN." },
+    { "what": "Version rule 2 deciding (marketplace-entry version with no plugin.json version)", "why": "FORMATS.md §5 lists it as blocking T1.9. sy-slate/sy-umber exercise DOUBLE declaration (T2.5), not rule 2 in isolation — the tree never has a marketplace entry version decide, because every plugin except sy-cinder declares one in plugin.json, and sy-cinder's marketplace entry declares none either. Closing that gap needs a scratch-machine install, not a fixture." },
+    { "what": "A command name colliding across TWO PLUGINS", "why": "FORMATS.md §5 lists it. `synthetic-report` collides personal-vs-plugin (skills-dir-plugin/ vs scale/tree/home/.claude/commands/), which is a partial fixture. Plugin-vs-plugin remains open." }
+  ]
+}
