@@ -34,6 +34,7 @@ export interface Warning {
 
 export type WarningCode =
   | 'collector-failed'      // one collector died; its section is degraded
+  | 'partial'               // ok, but knowingly incomplete — an input was absent
   | 'reconciliation'        // CLI and file disagree — T1.8, reported not resolved
   | 'shadowed'              // same name in two scopes — T1.7
   | 'path-collision'        // two project keys normalise to one — 10 of 102 locally
@@ -260,7 +261,12 @@ export interface Collector<T> {
 }
 
 export interface CollectContext {
-  /** Fixture root. Set in tests; collectors must never hit the real machine. */
+  /**
+   * Fixture root — **the repository's `fixtures/` directory**, not a $HOME
+   * substitute. Collectors map e.g. `<fixtureRoot>/files/claude-json-structure.json`
+   * and `<fixtureRoot>/cli/<version>/mcp-list.txt`. Set in tests; collectors
+   * must never hit the real machine when it is present.
+   */
   fixtureRoot?: string;
   /** Guarantees zero egress when true. Asserted in tests. */
   offline: boolean;

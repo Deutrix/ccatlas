@@ -20,6 +20,13 @@
 
     // esbuild emits the artifact; tsc is a type checker only.
     "noEmit": true,
+
+    // Required for multi-file TS module graphs to be importable from the .mjs
+    // test files. Node's type stripper does no .js -> .ts remapping, so a
+    // '../util/x.js' specifier typechecks but fails at runtime with
+    // ERR_MODULE_NOT_FOUND; a '../util/x.ts' specifier runs but needs this
+    // flag to typecheck. `noEmit` above is the precondition the flag requires.
+    "allowImportingTsExtensions": true,
     "isolatedModules": true,
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
