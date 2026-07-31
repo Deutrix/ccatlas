@@ -1,0 +1,57 @@
+{
+  "__fixture": "attachment/deferred_tools_delta at session start - the tool roster, including every MCP tool.",
+  "__source": "<PROJECT-5>/453eb9e5 (2026-07-31), Claude Code 2.1.217",
+  "__key_facts": [
+    "addedNames[] holds tool ids. MCP tools appear as mcp__<server>__<tool>; plugin-bundled ones as mcp__plugin_<plugin>_<server>__<tool>.",
+    "pendingMcpServers[] names servers still CONNECTING at this point - their tools are NOT yet in addedNames. This is why the session-start MCP roster is incomplete.",
+    "pendingMcpServers uses the display form plugin:<plugin>:<server>, NOT the tool form mcp__plugin_<plugin>_<server>__. Two naming conventions for one server.",
+    "There is no isInitial flag on this record type."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000006",
+    "isSidechain": false,
+    "type": "attachment",
+    "uuid": "00000000-0000-4000-8000-000000000008",
+    "timestamp": "2026-07-31T08:06:10.400Z",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT-N>",
+    "sessionId": "00000000-0000-4000-8000-000000000002",
+    "version": "2.1.217",
+    "gitBranch": "<BRANCH>",
+    "attachment": {
+      "type": "deferred_tools_delta",
+      "addedNames": [
+        "CronCreate",
+        "CronDelete",
+        "CronList",
+        "DesignSync",
+        "EndConversation",
+        "EnterPlanMode",
+        "<ELIDED 73 of 81>",
+        "mcp__plugin_everything-claude-code_memory__read_graph",
+        "mcp__plugin_everything-claude-code_memory__search_nodes"
+      ],
+      "__addedNames_length": 81,
+      "__addedNames_mcp_sample": [
+        "mcp__claude_ai_Comfy_Cloud_MCP__authenticate",
+        "mcp__claude_ai_Comfy_Cloud_MCP__complete_authentication"
+      ],
+      "__addedNames_plugin_scoped_mcp_sample": [
+        "mcp__plugin_everything-claude-code_context7__query-docs",
+        "mcp__plugin_everything-claude-code_context7__resolve-library-id"
+      ],
+      "addedLines": [
+        "<ELIDED 81 entries; addedLines[i] === addedNames[i] for this record type>"
+      ],
+      "removedNames": [],
+      "readdedNames": [],
+      "pendingMcpServers": [
+        "claude-flow",
+        "claude-in-chrome",
+        "plugin:everything-claude-code:playwright",
+        "plugin:everything-claude-code:sequential-thinking"
+      ]
+    }
+  }
+}

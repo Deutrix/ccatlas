@@ -1,0 +1,41 @@
+{
+  "__fixture": "attachment/skill_listing with isInitial:false - skills/commands that became available MID-SESSION.",
+  "__source": "<PROJECT-2>/5f030791 (2026-07-13), Claude Code 2.1.207",
+  "__key_facts": [
+    "skillCount here counts the entries IN THIS RECORD (73), not the roster size (568 at session start). Do not treat it as a total.",
+    "These are ADDITIONS ONLY. skill_listing has no removedNames field, so a reconstructed skill roster can only grow.",
+    "In this session the additions were namespaced slash commands created on disk during the session."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000017",
+    "isSidechain": false,
+    "type": "attachment",
+    "uuid": "00000000-0000-4000-8000-000000000018",
+    "timestamp": "2026-07-13T17:47:40.231Z",
+    "session_id": "00000000-0000-4000-8000-000000000019",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT-N>",
+    "sessionId": "00000000-0000-4000-8000-000000000019",
+    "version": "2.1.207",
+    "gitBranch": "<BRANCH>",
+    "attachment": {
+      "type": "skill_listing",
+      "content": "- hive-mind:hive-mind: hive-mind\n- hive-mind:hive-mind-consensus: hive-mind-consensus\n- hive-mind:hive-mind-init: hive-mind-init\n- hive-mind:hive-mind-memory: hive-mind-memory\n- hi<CONTENT-TRUNCATED original_length=5312>",
+      "__content_length": 5312,
+      "skillCount": 73,
+      "isInitial": false,
+      "names": [
+        "hive-mind:hive-mind",
+        "hive-mind:hive-mind-consensus",
+        "hive-mind:hive-mind-init",
+        "hive-mind:hive-mind-memory",
+        "hive-mind:hive-mind-metrics",
+        "<ELIDED 66 of 73>",
+        "skill-health",
+        "verify"
+      ],
+      "__names_length": 73
+    }
+  }
+}

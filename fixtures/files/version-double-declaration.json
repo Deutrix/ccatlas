@@ -1,0 +1,57 @@
+{
+  "_note": "T2.5 test corpus. Two real cases of `version` declared in BOTH .claude-plugin/plugin.json and the marketplace entry. Observed on Claude Code 2.1.220. In both cases plugin.json's value is what lands in installed_plugins.json, confirming docs/02-architecture.md 3.3's 'plugin.json wins silently'. The DIVERGENT case is the positive test; the AGREEING case is the false-positive guard.",
+
+  "positive_divergent": {
+    "_why": "Highest-value artifact. Both declarations live in the SAME upstream repo, in the SAME directory (.claude-plugin/), and disagree by three minor versions. This is upstream authoring drift, not a cache artifact: the marketplace entry was never bumped alongside plugin.json. A consumer reading the marketplace entry sees 2.2.1; the plugin actually installed is 2.5.0.",
+    "plugin": "ui-ux-pro-max@ui-ux-pro-max-skill",
+    "marketplace_entry": {
+      "_path": "<HOME>/.claude/plugins/marketplaces/ui-ux-pro-max-skill/.claude-plugin/marketplace.json  ->  plugins[0]",
+      "name": "ui-ux-pro-max",
+      "source": "./",
+      "version": "2.2.1"
+    },
+    "marketplace_metadata_version": {
+      "_path": "same file -> metadata.version",
+      "version": "2.2.1",
+      "_note": "marketplace.json ALSO carries a top-level metadata.version, which agrees with the stale entry, not with plugin.json. A third version-bearing field 3.3 does not mention."
+    },
+    "plugin_json": {
+      "_path": "<HOME>/.claude/plugins/marketplaces/ui-ux-pro-max-skill/.claude-plugin/plugin.json (upstream) and the identical file in cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/.claude-plugin/plugin.json",
+      "name": "ui-ux-pro-max",
+      "version": "2.5.0"
+    },
+    "sibling_skill_json": {
+      "_path": "<HOME>/.claude/plugins/marketplaces/ui-ux-pro-max-skill/skill.json",
+      "version": "2.5.0",
+      "_note": "agrees with plugin.json; a 4th version-bearing file in the same repo."
+    },
+    "observed_resolution": {
+      "installed_plugins_json_version": "2.5.0",
+      "cache_dir": "cache/ui-ux-pro-max-skill/ui-ux-pro-max/2.5.0/",
+      "winner": "plugin.json",
+      "masked_value": "2.2.1"
+    }
+  },
+
+  "negative_agreeing": {
+    "_why": "False-positive guard. Double-declared but consistent. T2.5 must NOT flag this, or every well-maintained plugin trips the diagnostic.",
+    "plugin": "everything-claude-code@everything-claude-code",
+    "marketplace_entry": {
+      "_path": "<HOME>/.claude/plugins/marketplaces/everything-claude-code/.claude-plugin/marketplace.json -> plugins[0]",
+      "name": "everything-claude-code",
+      "source": "./",
+      "version": "1.9.0"
+    },
+    "plugin_json": {
+      "name": "everything-claude-code",
+      "version": "1.9.0"
+    },
+    "observed_resolution": {
+      "installed_plugins_json_version": "1.9.0",
+      "winner": "plugin.json (indistinguishable — values equal)",
+      "masked_value": null
+    }
+  },
+
+  "detection_rule_implied": "Flag when marketplaceEntry.version != null AND pluginJson.version != null AND the two strings differ. Report pluginJson.version as effective and marketplaceEntry.version as masked. Where they are equal, record the double declaration at INFO at most. Note that marketplace.json's top-level metadata.version is a THIRD field and tracked the stale entry here — decide explicitly whether T2.5 reads it."
+}

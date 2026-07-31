@@ -1,0 +1,61 @@
+{
+  "_note": "Shape of <marketplace-clone>/.claude-plugin/marketplace.json across the 4 local marketplaces. Claude Code 2.1.220. This is the file the fallback resolver reads for the 'version in the marketplace entry' rule of §3.3 and for source-type dispatch in T2.2.",
+
+  "topLevelKeys": {
+    "_observed_union": ["$schema", "name", "id", "description", "owner", "metadata", "renames", "plugins"],
+    "name": "string — REQUIRED, present in all 4",
+    "plugins": "array — REQUIRED, present in all 4",
+    "owner": "object — { name, email? }, present in all 4",
+    "$schema": "string — present in 2/4",
+    "metadata": "object — { description?, version? }, present in 3/4. metadata.version is a MARKETPLACE-level version, distinct from any plugin version.",
+    "id": "string — present in 1/4",
+    "description": "string — present in 2/4",
+    "renames": "object — Record<oldName,newName>, present ONLY in claude-plugins-official. Undocumented. ccatlas must resolve renames or it will report a renamed plugin as removed-and-added."
+  },
+
+  "pluginEntryKeys": {
+    "_observed_union": ["name", "description", "source", "strict", "skills", "author", "category", "homepage", "tags", "keywords", "version", "lspServers", "displayName"],
+    "name": "string — REQUIRED",
+    "source": "string | object — see sourceTypes below",
+    "version": "string — OPTIONAL and RARE. 16 of 281 entries across all 4 marketplaces declare it.",
+    "lspServers": "present on the *-lsp entries; relevant to T1.14 LSP extension collisions",
+    "skills": "array — declared skill list"
+  },
+
+  "sourceTypes": {
+    "_note": "Source is either a bare string (relative path within the marketplace repo) or an object with a discriminating `source` field.",
+    "_distribution_in_claude-plugins-official": {
+      "url": 142,
+      "git-subdir": 79,
+      "string-relative": 53,
+      "github": 2,
+      "_total": 276
+    },
+    "string_relative": {
+      "example": "./plugins/frontend-design",
+      "_note": "Resolved against the marketplace clone root."
+    },
+    "object_url_with_pin": {
+      "example": { "source": "url", "url": "https://github.com/obra/superpowers.git", "sha": "44c9b2d6e889982ac18c27d05a19fefe335194e1" },
+      "_note": "LOAD-BEARING FOR T2.4. The marketplace entry can pin a commit SHA via source.sha. This is a second, independent pinning mechanism that §3.3 does not mention — separate from `version` in plugin.json and from `version` in the marketplace entry. A marketplace that pins source.sha and never bumps it is stale-pinned regardless of what plugin.json says."
+    },
+    "object_github": {
+      "example": { "source": "github", "repo": "owner/name" }
+    },
+    "git_subdir": {
+      "_note": "79 entries in claude-plugins-official; shape not fully enumerated here."
+    }
+  },
+
+  "perMarketplaceObservations": {
+    "anthropic-agent-skills": { "plugins": 3, "entriesWithVersion": 0, "metadata.version": "1.0.0", "cloneIsGit": true },
+    "claude-plugins-official": { "plugins": 276, "entriesWithVersion": 14, "hasRenames": true, "cloneIsGit": false, "_cloneNote": "NOT a git checkout. Carries a .gcs-sha file (single 40-char SHA) instead — this marketplace is distributed as a GCS tarball. See FINDINGS.md; this breaks T2.2's installLocation-git-HEAD fallback for the largest marketplace." },
+    "everything-claude-code": { "plugins": 1, "entriesWithVersion": 1, "cloneIsGit": true },
+    "ui-ux-pro-max-skill": { "plugins": 1, "entriesWithVersion": 1, "metadata.version": "2.2.1", "cloneIsGit": true, "_note": "The double-declaration case — see version-double-declaration.json" }
+  },
+
+  "_the14VersionedEntriesInOfficial": {
+    "_note": "All are relative-source (./plugins/<name>). 13 of 14 are LSP shims at a flat 1.0.0; the 14th is security-guidance at 2.0.6. This is the population T2.5 must cross-check against cached plugin.json files.",
+    "names": ["clangd-lsp", "csharp-lsp", "cwc-makers", "gopls-lsp", "jdtls-lsp", "kotlin-lsp", "lua-lsp", "php-lsp", "pyright-lsp", "ruby-lsp", "rust-analyzer-lsp", "security-guidance", "swift-lsp", "typescript-lsp"]
+  }
+}

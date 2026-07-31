@@ -1,0 +1,45 @@
+{
+  "__fixture": "attachment/agent_listing_delta with isInitial:true - the session-start subagent roster.",
+  "__source": "<PROJECT-2>/708627c0 (2026-07-18), Claude Code 2.1.214",
+  "__key_facts": [
+    "This record is the most reliable SESSION LOAD BOUNDARY marker: present 59/59 sessions, and re-emitted on resume.",
+    "addedTypes[] are agent ids; plugin-provided agents carry a <plugin>: prefix.",
+    "removedTypes[] gives a removal channel (skill_listing has none).",
+    "addedLines[] is the rendered \"- name: description (Tools: ...)\" text, parallel to addedTypes."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000015",
+    "isSidechain": false,
+    "type": "attachment",
+    "uuid": "00000000-0000-4000-8000-000000000016",
+    "timestamp": "2026-07-18T19:47:58.026Z",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT-N>",
+    "sessionId": "00000000-0000-4000-8000-000000000014",
+    "version": "2.1.214",
+    "gitBranch": "<BRANCH>",
+    "attachment": {
+      "type": "agent_listing_delta",
+      "addedTypes": [
+        "adaptive-coordinator",
+        "architect",
+        "architecture",
+        "build-error-resolver",
+        "byzantine-coordinator",
+        "chief-of-staff",
+        "<ELIDED 72 of 80>",
+        "tdd-london-swarm",
+        "typescript-reviewer"
+      ],
+      "__addedTypes_length": 80,
+      "addedLines": [
+        "- adaptive-coordinator: Dynamic topology switching coordinator with self-organizing swarm patterns and real-time optimization (Tools: All tools)",
+        "<ELIDED 79 of 80>"
+      ],
+      "removedTypes": [],
+      "isInitial": true,
+      "showConcurrencyNote": true
+    }
+  }
+}

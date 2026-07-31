@@ -1,0 +1,102 @@
+[
+  {
+    "id": "everything-claude-code@everything-claude-code",
+    "version": "1.9.0",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "<HOME>\\.claude\\plugins\\cache\\everything-claude-code\\everything-claude-code\\1.9.0",
+    "installedAt": "2026-03-30T14:50:05.718Z",
+    "lastUpdated": "2026-03-30T14:50:05.718Z",
+    "mcpServers": {
+      "github": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-github"
+        ]
+      },
+      "context7": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@upstash/context7-mcp@2.1.4"
+        ]
+      },
+      "exa": {
+        "type": "http",
+        "url": "https://mcp.exa.ai/mcp"
+      },
+      "memory": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-memory"
+        ]
+      },
+      "playwright": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@playwright/mcp@0.0.68",
+          "--extension"
+        ]
+      },
+      "sequential-thinking": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@modelcontextprotocol/server-sequential-thinking"
+        ]
+      }
+    }
+  },
+  {
+    "id": "figma@claude-plugins-official",
+    "version": "2.2.87",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.87",
+    "installedAt": "2026-07-06T20:54:49.686Z",
+    "lastUpdated": "2026-07-31T08:10:58.939Z",
+    "mcpServers": {
+      "figma": {
+        "type": "http",
+        "url": "https://mcp.figma.com/mcp"
+      }
+    }
+  },
+  {
+    "id": "frontend-design@claude-plugins-official",
+    "version": "unknown",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\frontend-design\\unknown",
+    "installedAt": "2026-04-08T17:33:56.267Z",
+    "lastUpdated": "2026-07-31T08:10:55.528Z"
+  },
+  {
+    "id": "superpowers@claude-plugins-official",
+    "version": "6.2.0",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\6.2.0",
+    "installedAt": "2026-03-30T14:49:00.556Z",
+    "lastUpdated": "2026-07-31T08:10:59.515Z"
+  },
+  {
+    "id": "ui-ux-pro-max@ui-ux-pro-max-skill",
+    "version": "2.5.0",
+    "scope": "user",
+    "enabled": true,
+    "installPath": "<HOME>\\.claude\\plugins\\cache\\ui-ux-pro-max-skill\\ui-ux-pro-max\\2.5.0",
+    "installedAt": "2026-03-30T14:50:40.236Z",
+    "lastUpdated": "2026-03-30T14:50:40.236Z"
+  },
+  {
+    "id": "ccatlas-probe@inline",
+    "version": "0.0.1-probe",
+    "scope": "session",
+    "enabled": true,
+    "installPath": "<TMP>\\sideload\\ccatlas-probe"
+  }
+]

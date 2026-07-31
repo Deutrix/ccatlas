@@ -1,0 +1,44 @@
+{
+  "__fixture": "attachment/skill_listing with isInitial:true - the session-start skill+command roster.",
+  "__source": "<PROJECT-2>/708627c0 (2026-07-18), Claude Code 2.1.214",
+  "__key_facts": [
+    "names[] is COMPLETE and length === skillCount.",
+    "content is a rendered listing TRUNCATED at 30000 chars - do not parse it.",
+    "names[] mixes personal skills (bare), plugin skills (<plugin>:<skill>) and user slash commands (<dir>:<name>)."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000012",
+    "isSidechain": false,
+    "type": "attachment",
+    "uuid": "00000000-0000-4000-8000-000000000013",
+    "timestamp": "2026-07-18T19:47:58.026Z",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT-N>",
+    "sessionId": "00000000-0000-4000-8000-000000000014",
+    "version": "2.1.214",
+    "gitBranch": "<BRANCH>",
+    "attachment": {
+      "type": "skill_listing",
+      "content": "- agent-harness-construction: Design and optimize AI agent action spaces, tool definitions, and observation formatting for higher completion rates.\n- agentdb-advanced: Master advanced AgentDB features including QUIC synchronization, multi-database management, custom distance metrics, hybrid search, <CONTENT-TRUNCATED original_length=29999>",
+      "__content_length": 29999,
+      "__content_tail": "- security-review: Complete a security review of the pending changes on the current branch",
+      "skillCount": 581,
+      "isInitial": true,
+      "names": [
+        "agent-harness-construction",
+        "agentdb-advanced",
+        "agentdb-learning",
+        "agentdb-memory-patterns",
+        "agentdb-optimization",
+        "agentdb-vector-search",
+        "agentic-engineering",
+        "ai-first-engineering",
+        "<ELIDED 571 of 581>",
+        "review",
+        "security-review"
+      ],
+      "__names_length": 581
+    }
+  }
+}

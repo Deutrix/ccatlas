@@ -1,0 +1,100 @@
+{
+  "_note": "~/.claude/settings.json + settings.local.json — the five keys ccatlas cares about, plus a full key inventory. Values redacted except where structurally load-bearing. Claude Code 2.1.220.",
+  "settings.json": {
+    "allTopLevelKeys": {
+      "env": "object",
+      "permissions": "object",
+      "hooks": "object",
+      "statusLine": "object",
+      "enabledPlugins": "object",
+      "extraKnownMarketplaces": "object",
+      "alwaysThinkingEnabled": "boolean",
+      "effortLevel": "string",
+      "advisorModel": "string",
+      "autoUpdatesChannel": "string",
+      "tui": "string",
+      "skipDangerousModePermissionPrompt": "boolean",
+      "skipWorkflowUsageWarning": "boolean",
+      "theme": "string"
+    },
+    "enabledPlugins": {
+      "_shape": "Record<\"<plugin>@<marketplace>\", boolean>",
+      "_note": "Key form is plugin@marketplace — identical to the keys of installed_plugins.json.plugins and to the id field of `claude plugin list --json`. All 5 are true here; a false value is how a plugin is disabled without uninstalling it.",
+      "value": {
+        "superpowers@claude-plugins-official": true,
+        "everything-claude-code@everything-claude-code": true,
+        "ui-ux-pro-max@ui-ux-pro-max-skill": true,
+        "frontend-design@claude-plugins-official": true,
+        "figma@claude-plugins-official": true
+      }
+    },
+    "extraKnownMarketplaces": {
+      "_shape": "Record<marketplaceName, { source: { source: \"github\"|\"url\"|\"git\"|..., repo?, url?, path?, ref? } }>",
+      "_note": "3 entries here vs 4 in known_marketplaces.json. claude-plugins-official is ABSENT because it is auto-installed (see .claude.json officialMarketplaceAutoInstalled). Critically: NO autoUpdate field on any entry.",
+      "value": {
+        "everything-claude-code": {
+          "source": {
+            "source": "github",
+            "repo": "affaan-m/everything-claude-code"
+          }
+        },
+        "ui-ux-pro-max-skill": {
+          "source": {
+            "source": "github",
+            "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
+          }
+        },
+        "anthropic-agent-skills": {
+          "source": {
+            "source": "github",
+            "repo": "anthropics/skills"
+          }
+        }
+      }
+    },
+    "pluginConfigs": {
+      "present": false,
+      "_note": "ABSENT on this machine. §3.2 lists it; there is no local fixture and its shape is unverified."
+    },
+    "env": {
+      "_shape": "Record<string,string>",
+      "keyCount": 3,
+      "keyNames": [
+        "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS",
+        "CLAUDE_FLOW_V3_ENABLED",
+        "CLAUDE_FLOW_HOOKS_ENABLED"
+      ],
+      "_valuesRedacted": true
+    },
+    "permissions": {
+      "_shape": "{ allow?: string[], deny?: string[], ask?: string[], additionalDirectories?: string[], defaultMode?: string }",
+      "keysPresent": [
+        "allow"
+      ],
+      "allowRuleCount": 4
+    },
+    "_otherNotable": {
+      "hooks": "object, 7 hook-event keys",
+      "statusLine": "object, 3 keys",
+      "autoUpdatesChannel": "\"latest\" — Claude Code CLI release channel, NOT a marketplace auto-update flag"
+    }
+  },
+  "settings.local.json": {
+    "allTopLevelKeys": {
+      "permissions": "object",
+      "enabledMcpjsonServers": "array"
+    },
+    "permissions": {
+      "keysPresent": [
+        "allow",
+        "deny"
+      ]
+    },
+    "enabledMcpjsonServers": {
+      "_shape": "string[]",
+      "count": 1,
+      "_note": "Names the .mcp.json servers the user approved. Pairs with the per-project enabledMcpjsonServers / disabledMcpjsonServers arrays in ~/.claude.json."
+    },
+    "_note": "Does NOT carry enabledPlugins / extraKnownMarketplaces / pluginConfigs on this machine. Local scope overrides user scope only for the keys it defines."
+  }
+}

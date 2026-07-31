@@ -1,0 +1,276 @@
+{
+  "__fixture": "Opening records of one session, in file order. Claude Code 2.1.217, entrypoint=cli.",
+  "__source": "<PROJECT-5>/453eb9e5 (2026-07-31)",
+  "__redaction": "uuids replaced with synthetic ones; cwd/gitBranch/paths redacted; long strings and arrays elided.",
+  "records": [
+    {
+      "__line": 0,
+      "type": "last-prompt",
+      "leafUuid": "00000000-0000-4000-8000-000000000001",
+      "sessionId": "00000000-0000-4000-8000-000000000002"
+    },
+    {
+      "__line": 1,
+      "type": "mode",
+      "mode": "normal",
+      "sessionId": "00000000-0000-4000-8000-000000000002"
+    },
+    {
+      "__line": 2,
+      "type": "permission-mode",
+      "permissionMode": "bypassPermissions",
+      "sessionId": "00000000-0000-4000-8000-000000000002"
+    },
+    {
+      "__line": 3,
+      "type": "bridge-session",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "bridgeSessionId": "<REDACTED>",
+      "lastSequenceNum": 0
+    },
+    {
+      "__line": 4,
+      "parentUuid": null,
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000003",
+      "timestamp": "2026-07-31T08:05:53.718Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "hook_success",
+        "__note": "payload elided - not relevant to T0.4",
+        "hookEvent": "SessionStart",
+        "hookName": "<REDACTED>"
+      }
+    },
+    {
+      "__line": 5,
+      "parentUuid": "00000000-0000-4000-8000-000000000003",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000004",
+      "timestamp": "2026-07-31T08:05:53.719Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "hook_success",
+        "__note": "payload elided - not relevant to T0.4",
+        "hookEvent": "SessionStart",
+        "hookName": "<REDACTED>"
+      }
+    },
+    {
+      "__line": 6,
+      "parentUuid": "00000000-0000-4000-8000-000000000004",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000005",
+      "timestamp": "2026-07-31T08:05:53.720Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "hook_success",
+        "__note": "payload elided - not relevant to T0.4",
+        "hookEvent": "SessionStart",
+        "hookName": "<REDACTED>"
+      }
+    },
+    {
+      "__line": 7,
+      "parentUuid": "00000000-0000-4000-8000-000000000005",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000001",
+      "timestamp": "2026-07-31T08:05:53.721Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "hook_additional_context",
+        "__note": "payload elided - not relevant to T0.4",
+        "hookEvent": "SessionStart",
+        "hookName": "<REDACTED>"
+      }
+    },
+    {
+      "__line": 8,
+      "type": "file-history-snapshot",
+      "messageId": "00000000-0000-4000-8000-000000000006",
+      "snapshot": {
+        "messageId": "00000000-0000-4000-8000-000000000006",
+        "trackedFileBackups": {},
+        "timestamp": "2026-07-31T08:06:10.403Z"
+      },
+      "isSnapshotUpdate": false
+    },
+    {
+      "__line": 9,
+      "parentUuid": "00000000-0000-4000-8000-000000000001",
+      "isSidechain": false,
+      "promptId": "00000000-0000-4000-8000-000000000007",
+      "type": "user",
+      "message": {
+        "role": "user",
+        "content": "<CONTENT length=62>"
+      },
+      "uuid": "00000000-0000-4000-8000-000000000006",
+      "timestamp": "2026-07-31T08:06:10.402Z",
+      "permissionMode": "bypassPermissions",
+      "origin": {
+        "kind": "human"
+      },
+      "promptSource": "typed",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>"
+    },
+    {
+      "__line": 10,
+      "parentUuid": "00000000-0000-4000-8000-000000000006",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000008",
+      "timestamp": "2026-07-31T08:06:10.400Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "deferred_tools_delta",
+        "addedNames": [
+          "CronCreate",
+          "CronDelete",
+          "CronList",
+          "DesignSync",
+          "<ELIDED 76 of 81>",
+          "mcp__plugin_everything-claude-code_memory__search_nodes"
+        ],
+        "addedLines": [
+          "CronCreate",
+          "CronDelete",
+          "CronList",
+          "DesignSync",
+          "<ELIDED 76 of 81>",
+          "mcp__plugin_everything-claude-code_memory__search_nodes"
+        ],
+        "removedNames": [],
+        "readdedNames": [],
+        "pendingMcpServers": [
+          "claude-flow",
+          "claude-in-chrome",
+          "plugin:everything-claude-code:playwright",
+          "plugin:everything-claude-code:sequential-thinking"
+        ]
+      }
+    },
+    {
+      "__line": 11,
+      "parentUuid": "00000000-0000-4000-8000-000000000008",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000009",
+      "timestamp": "2026-07-31T08:06:10.400Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "agent_listing_delta",
+        "addedTypes": [
+          "adaptive-coordinator",
+          "architect",
+          "architecture",
+          "build-error-resolver",
+          "<ELIDED 75 of 80>",
+          "typescript-reviewer"
+        ],
+        "addedLines": [
+          "- adaptive-coordinator: Dynamic topology switching coordinator with self-organizing swarm patterns and real-time optimization (Tools: All tools)",
+          "- architect: Software architecture specialist for system design, scalability, and technical decision-making. Use PROACTIVELY when planning new features, refactoring large systems, or making architectural decisions. (Tools: Read, Grep, Glob)",
+          "- architecture: SPARC Architecture phase specialist for system design with self-learning (Tools: All tools)",
+          "- build-error-resolver: Build and TypeScript error resolution specialist. Use PROACTIVELY when build fails or type errors occur. Fixes build/type errors only with minimal diffs, no architectural edits. Focuses on getting the build green quickly. (Tools: Read, Write, Edit, Bash, Grep, Glob)",
+          "<ELIDED 75 of 80>",
+          "- typescript-reviewer: Expert TypeScript/JavaScript code reviewer specializing in type safety, async correctness, Node/web security, and idiomatic patterns. Use for all TypeScript and JavaScript code changes. MUST BE USED for TypeScript/JavaScript projects. (Tools: Read, Grep, Glob, Bash)"
+        ],
+        "removedTypes": [],
+        "isInitial": true,
+        "showConcurrencyNote": true
+      }
+    },
+    {
+      "__line": 12,
+      "parentUuid": "00000000-0000-4000-8000-000000000009",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000010",
+      "timestamp": "2026-07-31T08:06:10.400Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "mcp_instructions_delta",
+        "addedNames": [
+          "plugin:everything-claude-code:context7"
+        ],
+        "addedBlocks": [
+          "## plugin:everything-claude-code:context7\nUse this server to retrieve up-to-date documentation and code examples for any library."
+        ],
+        "removedNames": []
+      }
+    },
+    {
+      "__line": 13,
+      "parentUuid": "00000000-0000-4000-8000-000000000010",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000011",
+      "timestamp": "2026-07-31T08:06:10.401Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000002",
+      "version": "2.1.217",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "skill_listing",
+        "content": "- agent-harness-construction: Design and optimize AI agent action spaces, tool definitions, and observation formatting for higher completion rates.\n- agentdb-advanced: Master advanced AgentDB features including QUIC sync<CONTENT-TRUNCATED original_length=30000>",
+        "skillCount": 578,
+        "isInitial": true,
+        "names": [
+          "agent-harness-construction",
+          "agentdb-advanced",
+          "agentdb-learning",
+          "agentdb-memory-patterns",
+          "<ELIDED 573 of 578>",
+          "review"
+        ]
+      }
+    }
+  ]
+}

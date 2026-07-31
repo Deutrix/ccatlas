@@ -1,0 +1,7 @@
+Validating plugin manifest: <TMP>\sideload\ccatlas-probe\.claude-plugin\plugin.json
+
+⚠ Found 1 warning:
+
+  ❯ author: No author information provided. Consider adding author details for plugin attribution
+
+✘ Validation failed (--strict treats warnings as errors)

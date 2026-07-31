@@ -1,0 +1,77 @@
+{
+  "_note": "Excerpt of <installLocation>/.claude-plugin/marketplace.json for each marketplace, limited to entries for plugins installed on this machine, plus the marketplace-level SHA sidecar. Captured by T0.1 as evidence that a resolved commit SHA IS reachable locally for installed plugins.",
+  "marketplaces": {
+    "claude-plugins-official": {
+      "marketplaceManifestTopLevelKeys": [
+        "$schema",
+        "name",
+        "description",
+        "owner",
+        "renames",
+        "plugins"
+      ],
+      "pluginCount": 276,
+      "entries": {
+        "figma": {
+          "version": null,
+          "source": {
+            "source": "url",
+            "url": "https://github.com/figma/mcp-server-guide.git",
+            "sha": "ef474d181a6eca44b37722f839e8a7eb58d644ec"
+          }
+        },
+        "frontend-design": {
+          "version": null,
+          "source": "./plugins/frontend-design"
+        },
+        "superpowers": {
+          "version": null,
+          "source": {
+            "source": "url",
+            "url": "https://github.com/obra/superpowers.git",
+            "sha": "44c9b2d6e889982ac18c27d05a19fefe335194e1"
+          }
+        }
+      },
+      "gcsShaSidecar": "c6e19310289232d8914e638af69268d75cb30c5d",
+      "gitHead": null
+    },
+    "everything-claude-code": {
+      "marketplaceManifestTopLevelKeys": [
+        "$schema",
+        "name",
+        "description",
+        "owner",
+        "metadata",
+        "plugins"
+      ],
+      "pluginCount": 1,
+      "entries": {
+        "everything-claude-code": {
+          "version": "1.9.0",
+          "source": "./"
+        }
+      },
+      "gcsShaSidecar": null,
+      "gitHead": "656cf4c94a3f2a0f6c7ca597e87d35e520b0ca56"
+    },
+    "ui-ux-pro-max-skill": {
+      "marketplaceManifestTopLevelKeys": [
+        "name",
+        "id",
+        "owner",
+        "metadata",
+        "plugins"
+      ],
+      "pluginCount": 1,
+      "entries": {
+        "ui-ux-pro-max": {
+          "version": "2.2.1",
+          "source": "./"
+        }
+      },
+      "gcsShaSidecar": null,
+      "gitHead": "4255c218a6762c945a782701fd38dfb24fc10064"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000013",
+  "isSidechain": false,
+  "type": "user",
+  "uuid": "00000000-0000-4000-8000-00000000014",
+  "timestamp": "2026-07-17T17:39:04.123Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000015",
+  "version": "2.1.212",
+  "gitBranch": "<BRANCH>",
+  "message": {
+    "role": "user",
+    "content": "<command-name>/clear</command-name>\n            <command-message><CONTENT></command-message>\n            <command-args><CONTENT></command-args>"
+  },
+  "<note>": "Only built-in CLI commands appear in this form. Plugin/personal commands do not."
+}

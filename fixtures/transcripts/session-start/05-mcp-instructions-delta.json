@@ -1,0 +1,33 @@
+{
+  "__fixture": "attachment/mcp_instructions_delta - MCP servers that publish server instructions.",
+  "__source": "<PROJECT-5>/453eb9e5 (2026-07-31), Claude Code 2.1.217",
+  "__key_facts": [
+    "addedNames[] covers ONLY servers that publish an instructions block - not the full connected-server set.",
+    "Absent entirely from 6 of 59 sessions sampled. NOT a reliable MCP-server roster.",
+    "Server ids use the display form; plugin-bundled servers appear as plugin:<plugin>:<server>."
+  ],
+  "record": {
+    "parentUuid": "00000000-0000-4000-8000-000000000009",
+    "isSidechain": false,
+    "type": "attachment",
+    "uuid": "00000000-0000-4000-8000-000000000010",
+    "timestamp": "2026-07-31T08:06:10.400Z",
+    "userType": "external",
+    "entrypoint": "cli",
+    "cwd": "<HOME>/<PROJECT-N>",
+    "sessionId": "00000000-0000-4000-8000-000000000002",
+    "version": "2.1.217",
+    "gitBranch": "<BRANCH>",
+    "attachment": {
+      "type": "mcp_instructions_delta",
+      "addedNames": [
+        "plugin:everything-claude-code:context7"
+      ],
+      "addedBlocks": [
+        "## plugin:everything-claude-code:context7\nUse this server to retrieve up-to-date documentation and code examples for any library."
+      ],
+      "__addedBlocks_length": 1,
+      "removedNames": []
+    }
+  }
+}

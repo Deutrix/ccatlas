@@ -1,0 +1,16 @@
+# plugin details — always-on figure vs model / reachability
+# Claude Code 2.1.220. Captured T0.2. Values are the 'Always-on: ~N tok' summary line.
+# Redacted: no absolute paths, host or user appear in plugin details output.
+
+condition                                ui-ux-pro-max superpowers frontend-design
+(default: no env, no flag)                     ~401       ~688        ~78
+CLI global --model ignored -> see note         ~401       ~688        ~78
+ANTHROPIC_MODEL=claude-opus-5                  ~401       ~688        ~78
+ANTHROPIC_MODEL=claude-sonnet-5                ~401       ~688        ~78
+ANTHROPIC_MODEL=claude-opus-4-1                ~401       ~688        ~78
+ANTHROPIC_MODEL=claude-sonnet-4-5              ~285       ~465        ~54
+ANTHROPIC_MODEL=claude-haiku-4-5-20251001       ~285       ~465        ~54
+ANTHROPIC_MODEL=claude-3-5-sonnet-20241022       ~236       ~584        ~59
+ANTHROPIC_MODEL=zzz-not-a-model                ~236       ~584        ~59
+BASE_URL unreachable (no model)                ~236       ~584        ~59
+BASE_URL unreachable + MODEL=opus-5            ~236       ~584        ~59

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "anthropic-agent-skills",
+    "source": "github",
+    "repo": "anthropics/skills",
+    "installLocation": "<HOME>\\.claude\\plugins\\marketplaces\\anthropic-agent-skills"
+  },
+  {
+    "name": "claude-plugins-official",
+    "source": "github",
+    "repo": "anthropics/claude-plugins-official",
+    "installLocation": "<HOME>\\.claude\\plugins\\marketplaces\\claude-plugins-official"
+  },
+  {
+    "name": "everything-claude-code",
+    "source": "github",
+    "repo": "affaan-m/everything-claude-code",
+    "installLocation": "<HOME>\\.claude\\plugins\\marketplaces\\everything-claude-code"
+  },
+  {
+    "name": "ui-ux-pro-max-skill",
+    "source": "github",
+    "repo": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "installLocation": "<HOME>\\.claude\\plugins\\marketplaces\\ui-ux-pro-max-skill"
+  }
+]

@@ -1,0 +1,54 @@
+{
+  "version": 2,
+  "plugins": {
+    "superpowers@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\superpowers\\6.2.0",
+        "version": "6.2.0",
+        "installedAt": "2026-03-30T14:49:00.556Z",
+        "lastUpdated": "2026-07-31T08:10:59.515Z",
+        "gitCommitSha": "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+      }
+    ],
+    "everything-claude-code@everything-claude-code": [
+      {
+        "scope": "user",
+        "installPath": "<HOME>\\.claude\\plugins\\cache\\everything-claude-code\\everything-claude-code\\1.9.0",
+        "version": "1.9.0",
+        "installedAt": "2026-03-30T14:50:05.718Z",
+        "lastUpdated": "2026-03-30T14:50:05.718Z",
+        "gitCommitSha": "656cf4c94a3f2a0f6c7ca597e87d35e520b0ca56"
+      }
+    ],
+    "ui-ux-pro-max@ui-ux-pro-max-skill": [
+      {
+        "scope": "user",
+        "installPath": "<HOME>\\.claude\\plugins\\cache\\ui-ux-pro-max-skill\\ui-ux-pro-max\\2.5.0",
+        "version": "2.5.0",
+        "installedAt": "2026-03-30T14:50:40.236Z",
+        "lastUpdated": "2026-03-30T14:50:40.236Z",
+        "gitCommitSha": "4255c218a6762c945a782701fd38dfb24fc10064"
+      }
+    ],
+    "frontend-design@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\frontend-design\\unknown",
+        "version": "unknown",
+        "installedAt": "2026-04-08T17:33:56.267Z",
+        "lastUpdated": "2026-07-31T08:10:55.528Z"
+      }
+    ],
+    "figma@claude-plugins-official": [
+      {
+        "scope": "user",
+        "installPath": "<HOME>\\.claude\\plugins\\cache\\claude-plugins-official\\figma\\2.2.87",
+        "version": "2.2.87",
+        "installedAt": "2026-07-06T20:54:49.686Z",
+        "lastUpdated": "2026-07-31T08:10:58.939Z",
+        "gitCommitSha": "a72c41ef5cd8ea88c96dd4b2e73311463b1cf6bc"
+      }
+    ]
+  }
+}

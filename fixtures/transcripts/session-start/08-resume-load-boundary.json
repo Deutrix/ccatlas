@@ -1,0 +1,76 @@
+{
+  "__fixture": "ONE .jsonl file containing TWO session-load boundaries, 11h25m apart (resume).",
+  "__source": "<PROJECT-2>/708627c0 (2026-07-18/19), Claude Code 2.1.214",
+  "__key_facts": [
+    "agent_listing_delta isInitial:true is re-emitted on resume; skill_listing isInitial:true is NOT (this file has 2 agent blocks, 1 skill block).",
+    "Therefore: one transcript file != one session load. Counting files undercounts sessionsLoaded.",
+    "Observed in 6 of 59 top-level transcripts; one file carries 4 boundaries.",
+    "Because the skill roster is not re-emitted, a plugin toggled between the two boundaries is invisible for skills."
+  ],
+  "records": [
+    {
+      "__line": 11,
+      "parentUuid": "00000000-0000-4000-8000-000000000015",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000016",
+      "timestamp": "2026-07-18T19:47:58.026Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000014",
+      "version": "2.1.214",
+      "gitBranch": "<BRANCH>",
+      "attachment": {
+        "type": "agent_listing_delta",
+        "addedTypes": [
+          "adaptive-coordinator",
+          "architect",
+          "architecture",
+          "<ELIDED 76 of 80>",
+          "typescript-reviewer"
+        ],
+        "__addedTypes_length": 80,
+        "addedLines": [
+          "<ELIDED 80>"
+        ],
+        "removedTypes": [],
+        "isInitial": true,
+        "showConcurrencyNote": true
+      }
+    },
+    {
+      "__line": 5970,
+      "parentUuid": "00000000-0000-4000-8000-000000000025",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000026",
+      "timestamp": "2026-07-19T07:12:56.749Z",
+      "session_id": "00000000-0000-4000-8000-000000000014",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000014",
+      "version": "2.1.214",
+      "gitBranch": "<BRANCH>",
+      "slug": "<REDACTED>",
+      "attachment": {
+        "type": "agent_listing_delta",
+        "addedTypes": [
+          "adaptive-coordinator",
+          "architect",
+          "architecture",
+          "<ELIDED 76 of 80>",
+          "typescript-reviewer"
+        ],
+        "__addedTypes_length": 80,
+        "addedLines": [
+          "<ELIDED 80>"
+        ],
+        "removedTypes": [],
+        "isInitial": true,
+        "showConcurrencyNote": true
+      }
+    }
+  ]
+}

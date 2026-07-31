@@ -1,0 +1,31 @@
+figma 2.2.87
+  Plugin that includes the Figma MCP server and Skills for common workflows
+  Source: figma@claude-plugins-official
+
+Component inventory
+  Skills (12)  figma-code-connect, figma-create-new-file, figma-design-to-code, figma-generate-design, figma-generate-diagram, figma-generate-library, figma-implement-motion, figma-swiftui, figma-use, figma-use-figjam, figma-use-motion, figma-use-slides
+  Agents (0)
+  Hooks (0)
+  MCP servers (1)  figma  (tool schemas resolved at runtime; not counted)
+  LSP servers (0)
+
+Projected token cost
+  Always-on:   ~2,069 tok   added to every session
+
+Per-component (rounded)
+  component               always-on  on-invoke
+  figma-code-connect            ~90      ~9.7k
+  figma-create-new-file        ~170      ~1.3k
+  figma-design-to-code         ~190      ~1.6k
+  figma-generate-design        ~300     ~11.9k
+  figma-generate-diagram       ~280      ~3.5k
+  figma-generate-library       ~260        ~8k
+  figma-implement-motion       ~140      ~8.3k
+  figma-swiftui                ~220      ~1.2k
+  figma-use                    ~190     ~12.4k
+  figma-use-figjam              ~70      ~2.5k
+  figma-use-motion             ~100      ~2.4k
+  figma-use-slides              ~70      ~7.9k
+
+  On-invoke cost is paid each time a skill or agent fires.
+  Token counts are estimates and may differ from actual usage.

@@ -1,0 +1,42 @@
+# Plugin cache layout — <HOME>/.claude/plugins/
+# Claude Code 2.1.220, captured 2026-07-31. Redacted.
+#
+# Layout: cache/<marketplace>/<plugin>/<version>/  — version segment is the RESOLVED
+# version string, literally 'unknown' when resolution fails. plugin.json sits at
+# <version>/.claude-plugin/plugin.json (NOT at the version dir root).
+#
+# .in_use is a DIRECTORY, not a file. Its mtime is the liveness signal used by the
+# ~14-day orphan sweep; plugins/.last_inuse_sweep records the last sweep time.
+
+plugins/
+├── known_marketplaces.json
+├── installed_plugins.json
+├── config.json                    # {"repositories":{}} — empty on this machine
+├── blocklist.json                 # fetched plugin blocklist (undocumented in §3.2)
+├── plugin-catalog-cache.json      # ~343 KB remote catalog cache (undocumented)
+├── .last_inuse_sweep              # ISO timestamp of last orphan sweep
+├── repos/                         # EMPTY on this machine
+├── data/                          # per-plugin persistent data, <plugin>-<marketplace>
+│   ├── everything-claude-code-everything-claude-code
+│   ├── superpowers-claude-plugins-official
+├── marketplaces/
+│   ├── anthropic-agent-skills/    .git: present
+│   ├── claude-plugins-official/    .git: ABSENT
+│   ├── everything-claude-code/    .git: present
+│   ├── ui-ux-pro-max-skill/    .git: present
+└── cache/
+    ├── claude-plugins-official/
+    │   ├── figma/
+    │   │   ├── 2.2.81/  .in_use mtime=2026-07-31 10:10:59
+    │   │   ├── 2.2.87/  .in_use mtime=2026-07-31 10:31:30
+    │   ├── frontend-design/
+    │   │   ├── unknown/  .in_use mtime=2026-07-31 10:31:30
+    │   ├── superpowers/
+    │   │   ├── 6.1.1/  .in_use mtime=2026-07-31 10:10:59
+    │   │   ├── 6.2.0/  .in_use mtime=2026-07-31 10:31:30
+    ├── everything-claude-code/
+    │   ├── everything-claude-code/
+    │   │   ├── 1.9.0/  .in_use mtime=2026-07-31 10:31:30
+    ├── ui-ux-pro-max-skill/
+    │   ├── ui-ux-pro-max/
+    │   │   ├── 2.5.0/  .in_use mtime=2026-07-31 10:31:30

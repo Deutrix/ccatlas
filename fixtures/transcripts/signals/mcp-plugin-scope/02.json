@@ -1,0 +1,35 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000069",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000070",
+  "timestamp": "2026-07-08T19:19:48.084Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000071",
+  "version": "2.1.203",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000071",
+  "requestId": "<REQUEST-ID>",
+  "message": {
+    "id": "<MSG-ID>",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-opus-4-8",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_00000068",
+        "name": "mcp__plugin_figma_figma__authenticate",
+        "input": {}
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "<omitted>": "token counts elided"
+    }
+  },
+  "<note>": "Sibling content blocks (thinking/text) and all other records elided. tool_use.input reduced to signal-bearing keys only; toolUseResult dropped."
+}

@@ -1,0 +1,38 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000065",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000066",
+  "timestamp": "2026-07-11T12:05:35.306Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000067",
+  "version": "2.1.207",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000067",
+  "requestId": "<REQUEST-ID>",
+  "message": {
+    "id": "<MSG-ID>",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-fable-5",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_00000064",
+        "name": "mcp__plugin_everything-claude-code_playwright__browser_navigate",
+        "input": {},
+        "<dropped-input-keys>": [
+          "url"
+        ]
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "<omitted>": "token counts elided"
+    }
+  },
+  "<note>": "Sibling content blocks (thinking/text) and all other records elided. tool_use.input reduced to signal-bearing keys only; toolUseResult dropped."
+}

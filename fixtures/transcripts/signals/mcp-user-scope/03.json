@@ -1,0 +1,39 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000032",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000033",
+  "timestamp": "2026-07-15T17:33:50.922Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000030",
+  "version": "2.1.210",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000030",
+  "requestId": "<REQUEST-ID>",
+  "attributionSkill": "claude-in-chrome",
+  "message": {
+    "id": "<MSG-ID>",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-fable-5",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_00000031",
+        "name": "mcp__claude-in-chrome__tabs_context_mcp",
+        "input": {},
+        "<dropped-input-keys>": [
+          "createIfEmpty"
+        ]
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "<omitted>": "token counts elided"
+    }
+  },
+  "<note>": "Sibling content blocks (thinking/text) and all other records elided. tool_use.input reduced to signal-bearing keys only; toolUseResult dropped."
+}

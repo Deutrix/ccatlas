@@ -1,0 +1,68 @@
+{
+  "_note": "Observed on Claude Code 2.1.220. Maps each locally installed plugin to every version-bearing field, to test docs/02-architecture.md 3.3.",
+  "plugins": [
+    {
+      "plugin": "superpowers@claude-plugins-official",
+      "resolvedVersion": "6.2.0",
+      "installedRecord": {
+        "gitCommitSha": "eafe962b18f6c5dc70fb7c8cc7e83e61f4cdde06"
+      },
+      "pluginJsonVersion": "6.2.0",
+      "marketplaceEntryVersion": null,
+      "marketplaceEntrySource": {
+        "source": "url",
+        "url": "https://github.com/obra/superpowers.git",
+        "sha": "44c9b2d6e889982ac18c27d05a19fefe335194e1"
+      },
+      "marketplaceEntrySourceSha": "44c9b2d6e889982ac18c27d05a19fefe335194e1"
+    },
+    {
+      "plugin": "everything-claude-code@everything-claude-code",
+      "resolvedVersion": "1.9.0",
+      "installedRecord": {
+        "gitCommitSha": "656cf4c94a3f2a0f6c7ca597e87d35e520b0ca56"
+      },
+      "pluginJsonVersion": "1.9.0",
+      "marketplaceEntryVersion": "1.9.0",
+      "marketplaceEntrySource": "./",
+      "marketplaceEntrySourceSha": null
+    },
+    {
+      "plugin": "ui-ux-pro-max@ui-ux-pro-max-skill",
+      "resolvedVersion": "2.5.0",
+      "installedRecord": {
+        "gitCommitSha": "4255c218a6762c945a782701fd38dfb24fc10064"
+      },
+      "pluginJsonVersion": "2.5.0",
+      "marketplaceEntryVersion": "2.2.1",
+      "marketplaceEntrySource": "./",
+      "marketplaceEntrySourceSha": null
+    },
+    {
+      "plugin": "frontend-design@claude-plugins-official",
+      "resolvedVersion": "unknown",
+      "installedRecord": {
+        "gitCommitSha": null
+      },
+      "pluginJsonVersion": null,
+      "marketplaceEntryVersion": null,
+      "marketplaceEntrySource": "./plugins/frontend-design",
+      "marketplaceEntrySourceSha": null
+    },
+    {
+      "plugin": "figma@claude-plugins-official",
+      "resolvedVersion": "2.2.87",
+      "installedRecord": {
+        "gitCommitSha": "a72c41ef5cd8ea88c96dd4b2e73311463b1cf6bc"
+      },
+      "pluginJsonVersion": "2.2.87",
+      "marketplaceEntryVersion": null,
+      "marketplaceEntrySource": {
+        "source": "url",
+        "url": "https://github.com/figma/mcp-server-guide.git",
+        "sha": "ef474d181a6eca44b37722f839e8a7eb58d644ec"
+      },
+      "marketplaceEntrySourceSha": "ef474d181a6eca44b37722f839e8a7eb58d644ec"
+    }
+  ]
+}

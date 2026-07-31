@@ -1,0 +1,38 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000017",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000018",
+  "timestamp": "2026-07-17T17:40:16.309Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000015",
+  "version": "2.1.212",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000019",
+  "requestId": "<REQUEST-ID>",
+  "message": {
+    "id": "<MSG-ID>",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-opus-4-8",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_00000016",
+        "name": "mcp__laravel-boost__database-query",
+        "input": {},
+        "<dropped-input-keys>": [
+          "query"
+        ]
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "<omitted>": "token counts elided"
+    }
+  },
+  "<note>": "Sibling content blocks (thinking/text) and all other records elided. tool_use.input reduced to signal-bearing keys only; toolUseResult dropped."
+}

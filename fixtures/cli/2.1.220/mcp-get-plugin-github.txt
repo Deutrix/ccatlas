@@ -1,0 +1,3 @@
+plugin:everything-claude-code:github:
+  Scope: Dynamic config (from command line)
+  Status: ✔ Connected

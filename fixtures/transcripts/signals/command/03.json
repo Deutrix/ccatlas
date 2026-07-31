@@ -1,0 +1,19 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000048",
+  "isSidechain": false,
+  "type": "user",
+  "uuid": "00000000-0000-4000-8000-00000000049",
+  "timestamp": "2026-07-07T17:53:44.671Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000050",
+  "version": "2.1.202",
+  "gitBranch": "<BRANCH>",
+  "promptId": "00000000-0000-4000-8000-00000000051",
+  "message": {
+    "role": "user",
+    "content": "<command-name>/model</command-name>\n            <command-message><CONTENT></command-message>\n            <command-args><CONTENT></command-args>"
+  },
+  "<note>": "Only built-in CLI commands appear in this form. Plugin/personal commands do not."
+}

@@ -1,0 +1,10 @@
+browsermcp:
+  Scope: User config (available in all your projects)
+  Status: ✘ Failed to connect
+  Issue: -32000: MCP error -32000: Connection closed
+  Type: stdio
+  Command: npx -y @browsermcp/mcp@latest
+  Args:
+  Environment:
+
+To remove this server, run: claude mcp remove browsermcp -s user

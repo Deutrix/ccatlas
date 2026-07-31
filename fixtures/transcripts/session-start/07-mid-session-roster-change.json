@@ -1,0 +1,79 @@
+{
+  "__fixture": "Two deferred_tools_delta records 27 minutes apart: an MCP server drops out, then returns.",
+  "__source": "<PROJECT-1>/cb61d56c (2026-07-07), Claude Code 2.1.202",
+  "__key_facts": [
+    "Proves the runtime DOES emit roster-change records mid-session for MCP tools.",
+    "removedNames -> the tools left the roster; readdedNames -> the same ids came back.",
+    "This is the closest observed proxy for /reload-plugins. No literal /reload-plugins invocation exists anywhere in the corpus."
+  ],
+  "records": [
+    {
+      "__line": 943,
+      "parentUuid": "00000000-0000-4000-8000-000000000020",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000021",
+      "timestamp": "2026-07-07T18:30:02.747Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000022",
+      "version": "2.1.202",
+      "gitBranch": "<BRANCH>",
+      "slug": "transient-jingling-lerdorf",
+      "attachment": {
+        "type": "deferred_tools_delta",
+        "addedNames": [],
+        "__addedNames_length": 0,
+        "removedNames": [
+          "mcp__figma-dev-mode__get_design_context",
+          "mcp__figma-dev-mode__get_figjam",
+          "mcp__figma-dev-mode__get_metadata",
+          "<ELIDED 6 of 10>",
+          "mcp__figma-remote-mcp__get_variable_defs"
+        ],
+        "__removedNames_length": 10,
+        "readdedNames": [],
+        "__readdedNames_length": 0,
+        "pendingMcpServers": []
+      }
+    },
+    {
+      "__line": 1671,
+      "parentUuid": "00000000-0000-4000-8000-000000000023",
+      "isSidechain": false,
+      "type": "attachment",
+      "uuid": "00000000-0000-4000-8000-000000000024",
+      "timestamp": "2026-07-07T18:57:19.659Z",
+      "userType": "external",
+      "entrypoint": "cli",
+      "cwd": "<HOME>/<PROJECT-N>",
+      "sessionId": "00000000-0000-4000-8000-000000000022",
+      "version": "2.1.202",
+      "gitBranch": "<BRANCH>",
+      "slug": "transient-jingling-lerdorf",
+      "attachment": {
+        "type": "deferred_tools_delta",
+        "addedNames": [
+          "mcp__figma-dev-mode__get_design_context",
+          "mcp__figma-dev-mode__get_figjam",
+          "mcp__figma-dev-mode__get_metadata",
+          "<ELIDED 6 of 10>",
+          "mcp__figma-remote-mcp__get_variable_defs"
+        ],
+        "__addedNames_length": 10,
+        "removedNames": [],
+        "__removedNames_length": 0,
+        "readdedNames": [
+          "mcp__figma-dev-mode__get_design_context",
+          "mcp__figma-dev-mode__get_figjam",
+          "mcp__figma-dev-mode__get_metadata",
+          "<ELIDED 6 of 10>",
+          "mcp__figma-remote-mcp__get_variable_defs"
+        ],
+        "__readdedNames_length": 10,
+        "pendingMcpServers": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000040",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000041",
+  "timestamp": "2026-07-16T20:51:13.042Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000037",
+  "version": "2.1.211",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000037",
+  "requestId": "<REQUEST-ID>",
+  "attributionSkill": "superpowers:systematic-debugging",
+  "attributionPlugin": "superpowers",
+  "message": {
+    "role": "assistant",
+    "model": "claude-fable-5",
+    "content": [
+      {
+        "type": "text",
+        "text": "<CONTENT>"
+      }
+    ]
+  },
+  "<note>": "No tool_use block on this turn — attribution marks that the entity was in context, not that it was invoked."
+}

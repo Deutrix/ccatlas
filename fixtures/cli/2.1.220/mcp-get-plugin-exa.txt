@@ -1,0 +1,5 @@
+plugin:everything-claude-code:exa:
+  Scope: Dynamic config (from command line)
+  Status: ✔ Connected
+  Type: http
+  URL: https://mcp.exa.ai/mcp

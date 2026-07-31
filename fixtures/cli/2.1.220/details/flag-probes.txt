@@ -1,0 +1,32 @@
+# Flag probe — claude plugin details (Claude Code 2.1.220)
+# Redacted: <HOME> <HOST> <USER> — none appeared in output.
+
+$ claude plugin details --help
+Usage: claude plugin details [options] <name>
+
+Show a plugin's component inventory and projected token cost
+
+Options:
+  -h, --help  Display help for command
+
+$ claude plugin details --json figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--json'
+$ claude plugin details --format json figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--format'
+$ claude plugin details --output json figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--output'
+$ claude plugin details --model figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--model'
+$ claude plugin details --plain figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--plain'
+$ claude plugin details --quiet figma@claude-plugins-official
+  exit=1  stderr=error: unknown option '--quiet'
+
+$ claude plugin details definitely-not-a-plugin
+  exit=1
+  stdout=Plugin "definitely-not-a-plugin" not found. Run `claude plugin list` to see installed plugins, or pass --plugin-dir <path> to load one from disk.
+  stderr=
+
+$ claude plugin details autoresearch@skills-dir   # 161 dirs in <HOME>/.claude/skills, none are @skills-dir plugins
+  exit=1
+  stdout=Plugin "autoresearch@skills-dir" not found. Run `claude plugin list` to see installed plugins, or pass --plugin-dir <path> to load one from disk.

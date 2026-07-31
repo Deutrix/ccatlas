@@ -1,0 +1,38 @@
+{
+  "parentUuid": "00000000-0000-4000-8000-00000000035",
+  "isSidechain": false,
+  "type": "assistant",
+  "uuid": "00000000-0000-4000-8000-00000000036",
+  "timestamp": "2026-07-16T20:51:04.765Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000037",
+  "version": "2.1.211",
+  "gitBranch": "<BRANCH>",
+  "session_id": "00000000-0000-4000-8000-00000000037",
+  "requestId": "<REQUEST-ID>",
+  "message": {
+    "id": "<MSG-ID>",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-fable-5",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_00000034",
+        "name": "Skill",
+        "input": {
+          "skill": "superpowers:systematic-debugging",
+          "args": "Aircraft listing detail page: large image pushes details section on http<PATH>"
+        }
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "<omitted>": "token counts elided"
+    }
+  },
+  "<note>": "Sibling content blocks (thinking/text) and all other records elided. tool_use.input reduced to signal-bearing keys only; toolUseResult dropped."
+}

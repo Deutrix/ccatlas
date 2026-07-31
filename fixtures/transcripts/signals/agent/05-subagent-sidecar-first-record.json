@@ -1,0 +1,20 @@
+{
+  "parentUuid": null,
+  "isSidechain": true,
+  "promptId": "00000000-0000-4000-8000-00000000101",
+  "agentId": "aperf-review-<HEX16>",
+  "type": "user",
+  "message": {
+    "role": "user",
+    "content": "<CONTENT>"
+  },
+  "uuid": "00000000-0000-4000-8000-00000000102",
+  "timestamp": "2026-07-05T07:33:10.114Z",
+  "userType": "external",
+  "entrypoint": "cli",
+  "cwd": "<HOME>/<PROJECT>",
+  "sessionId": "00000000-0000-4000-8000-00000000002",
+  "version": "2.1.201",
+  "gitBranch": "<BRANCH>",
+  "<note>": "First record of a subagent sidecar transcript at <PROJECT-DIR>/<parent-session-uuid>/subagents/agent-<agentId>.jsonl. sessionId is the PARENT session's id, not a new session. isSidechain is true on every record in these files and false on every record in the top-level file — a strict partition. The Agent tool_use id in the parent does NOT equal agentId, so there is no direct dispatch->sidecar join key."
+}

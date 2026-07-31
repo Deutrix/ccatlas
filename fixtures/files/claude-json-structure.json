@@ -1,0 +1,226 @@
+{
+  "_note": "STRUCTURE ONLY. No values from ~/.claude.json are reproduced. Observed on Claude Code 2.1.220. File size ~193 KB, 95 top-level keys, 102 project keys.",
+  "_sensitive": "oauthAccount, userID, anonymousId, machineID, cachedGrowthBookFeatures, cachedStatsigGates and the other telemetry/experiment caches are present but out of ccatlas scope and deliberately not enumerated here.",
+  "topLevelKeyCount": 95,
+  "topLevelKeysOfInterest": {
+    "mcpServers": "object — USER-SCOPE MCP servers",
+    "projects": "object — keyed by ABSOLUTE PROJECT PATH; holds local-scope state incl. per-project mcpServers",
+    "autoUpdates": "boolean — Claude Code CLI self-updater. NOT a marketplace auto-update flag.",
+    "officialMarketplaceAutoInstalled": "boolean — how claude-plugins-official enters known_marketplaces.json without appearing in settings.extraKnownMarketplaces",
+    "officialMarketplaceAutoInstallAttempted": "boolean",
+    "pluginUsage": "object — 5 keys on this machine; per-plugin usage counters"
+  },
+  "userScopeMcpServers": {
+    "_shape": "Record<serverName, ServerDef>",
+    "count": 3,
+    "observedServerDefShapes": [
+      {
+        "type": "stdio",
+        "keys": [
+          "type",
+          "command",
+          "args",
+          "env"
+        ],
+        "_note": "args: array, env: object (empty on this machine)"
+      },
+      {
+        "type": "http",
+        "keys": [
+          "type",
+          "url"
+        ]
+      }
+    ],
+    "_serverNamesRedacted": true
+  },
+  "projectScope": {
+    "_keyForm": "absolute filesystem path, used verbatim as the JSON object key",
+    "keyCount": 102,
+    "keysAreAbsolutePaths": true,
+    "separatorSplit": {
+      "forwardSlashOnly": 72,
+      "backslashOnly": 30,
+      "mixedWithinOneKey": 0
+    },
+    "drivePrefixesObserved": [
+      "C:",
+      "E:"
+    ],
+    "trailingSeparatorKeys": 0,
+    "keysCollidingAfterCaseAndSeparatorNormalisation": 10,
+    "_collisionNote": "10 keys are duplicates of another key once lowercased and separator-normalised. Same project, two entries, divergent state. T1.3 MUST normalise and MUST report the collision rather than silently picking one.",
+    "projectsWithNonEmptyMcpServers": 12,
+    "projectMcpServerDefKeysObserved": [
+      "type",
+      "url",
+      "command",
+      "args",
+      "env"
+    ],
+    "projectMcpServerEnvVarNamesObserved": [],
+    "_t116Negative": "Zero project-scope MCP env entries on this machine — no local positive fixture for plaintext-credential detection exists. T1.16 needs a synthetic one.",
+    "perProjectFields": {
+      "allowedTools": {
+        "type": "array",
+        "presentIn": "102/102"
+      },
+      "mcpContextUris": {
+        "type": "array",
+        "presentIn": "102/102"
+      },
+      "mcpServers": {
+        "type": "object",
+        "presentIn": "102/102"
+      },
+      "enabledMcpjsonServers": {
+        "type": "array",
+        "presentIn": "102/102"
+      },
+      "disabledMcpjsonServers": {
+        "type": "array",
+        "presentIn": "102/102"
+      },
+      "hasTrustDialogAccepted": {
+        "type": "boolean",
+        "presentIn": "102/102"
+      },
+      "projectOnboardingSeenCount": {
+        "type": "number",
+        "presentIn": "102/102"
+      },
+      "hasClaudeMdExternalIncludesApproved": {
+        "type": "boolean",
+        "presentIn": "102/102"
+      },
+      "hasClaudeMdExternalIncludesWarningShown": {
+        "type": "boolean",
+        "presentIn": "102/102"
+      },
+      "hasCompletedProjectOnboarding": {
+        "type": "boolean",
+        "presentIn": "30/102"
+      },
+      "lastTotalWebSearchRequests": {
+        "type": "number",
+        "presentIn": "69/102"
+      },
+      "reactVulnerabilityCache": {
+        "type": "object",
+        "presentIn": "31/102"
+      },
+      "lastGracefulShutdown": {
+        "type": "boolean",
+        "presentIn": "41/102"
+      },
+      "lastVersionBase": {
+        "type": "string",
+        "presentIn": "37/102"
+      },
+      "hasUnseenTeamArtifacts": {
+        "type": "boolean",
+        "presentIn": "23/102"
+      },
+      "lastCost": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastAPIDuration": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastAPIDurationWithoutRetries": {
+        "type": "number",
+        "presentIn": "52/102"
+      },
+      "lastToolDuration": {
+        "type": "number",
+        "presentIn": "53/102"
+      },
+      "lastDuration": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastStartTime": {
+        "type": "number",
+        "presentIn": "16/102"
+      },
+      "lastLinesAdded": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastLinesRemoved": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastTotalInputTokens": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastTotalOutputTokens": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastTotalCacheCreationInputTokens": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastTotalCacheReadInputTokens": {
+        "type": "number",
+        "presentIn": "54/102"
+      },
+      "lastFpsAverage": {
+        "type": "number",
+        "presentIn": "43/102"
+      },
+      "lastFpsLow1Pct": {
+        "type": "number",
+        "presentIn": "43/102"
+      },
+      "lastModelUsage": {
+        "type": "object",
+        "presentIn": "52/102"
+      },
+      "lastSessionId": {
+        "type": "string",
+        "presentIn": "54/102"
+      },
+      "hasTrustDialogHooksAccepted": {
+        "type": "boolean",
+        "presentIn": "4/102"
+      },
+      "ignorePatterns": {
+        "type": "array",
+        "presentIn": "5/102"
+      },
+      "exampleFiles": {
+        "type": "array",
+        "presentIn": "24/102"
+      },
+      "lastSessionMetrics": {
+        "type": "object",
+        "presentIn": "25/102"
+      },
+      "lastHintSessionId": {
+        "type": "string",
+        "presentIn": "11/102"
+      },
+      "lastSessionFirstPrompt": {
+        "type": "string",
+        "presentIn": "11/102"
+      },
+      "lastSessionModified": {
+        "type": "number",
+        "presentIn": "11/102"
+      },
+      "disabledMcpServers": {
+        "type": "array",
+        "presentIn": "1/102"
+      },
+      "loggedAuthoredArtifactPaths": {
+        "type": "array",
+        "presentIn": "1/102"
+      }
+    }
+  }
+}

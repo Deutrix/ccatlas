@@ -1,0 +1,16 @@
+Checking MCP server health…
+
+claude.ai Comfy Cloud MCP: https://cloud.comfy.org/mcp - ! Needs authentication
+claude.ai Gmail: https://gmailmcp.googleapis.com/mcp/v1 - ✔ Connected
+claude.ai Google Calendar: https://calendarmcp.googleapis.com/mcp/v1 - ✔ Connected
+claude.ai Google Drive: https://drivemcp.googleapis.com/mcp/v1 - ✔ Connected
+plugin:everything-claude-code:github: npx -y @modelcontextprotocol/server-github - ✔ Connected
+plugin:everything-claude-code:context7: npx -y @upstash/context7-mcp@2.1.4 - ✔ Connected
+plugin:everything-claude-code:exa: https://mcp.exa.ai/mcp (HTTP) - ✔ Connected
+plugin:everything-claude-code:memory: npx -y @modelcontextprotocol/server-memory - ✔ Connected
+plugin:everything-claude-code:playwright: npx -y @playwright/mcp@0.0.68 --extension - ✔ Connected
+plugin:everything-claude-code:sequential-thinking: npx -y @modelcontextprotocol/server-sequential-thinking - ✔ Connected
+browsermcp: npx -y @browsermcp/mcp@latest  - ✘ Failed to connect — -32000: MCP error -32000: Connection closed
+figma-dev-mode: http://127.0.0.1:3845/mcp (HTTP) - ✘ Failed to connect — ConnectionRefused: Unable to connect. Is the computer able to access the url?
+figma: https://mcp.figma.com/mcp (HTTP) - ! Needs authentication
+claude-flow: cmd /c npx -y ruflo@latest mcp start - ⏸ Pending approval (run `claude` to approve)
