@@ -1,0 +1,15 @@
+# Source is normalised to LF in the repo, regardless of contributor platform.
+* text=auto eol=lf
+
+# Fixtures are captured verbatim from real `claude` CLI output and real
+# transcript files. They are compared byte-for-byte against live output by the
+# regression suite (TX.2) and must never be line-ending-normalised — a CRLF
+# rewrite on Windows checkout would silently break every fixture assertion and
+# the byte-identical rollback check (T5.26).
+fixtures/** -text
+
+# Build output: LF + shebang, must stay executable-shaped on every platform.
+bin/ccatlas text eol=lf
+
+# Lockfile is generated; keep diffs quiet.
+package-lock.json -diff
