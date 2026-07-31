@@ -50,6 +50,9 @@ jobs:
           node bin/ccatlas --version
           node bin/ccatlas --json
 
+      - name: Leak scan
+        run: npm run leak-scan
+
       - name: Test
         run: npm test
 

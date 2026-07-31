@@ -22,7 +22,8 @@
     "typecheck": "tsc --noEmit",
     "prepack": "node scripts/build.mjs",
     "pretest": "npm run build",
-    "test": "node --test --experimental-strip-types \"tests/**/*.test.mjs\""
+    "test": "node --test --experimental-strip-types \"tests/**/*.test.mjs\"",
+    "leak-scan": "node scripts/leak-scan.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.13.0",
