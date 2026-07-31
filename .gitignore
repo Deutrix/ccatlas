@@ -1,0 +1,17 @@
+# IDE
+.idea/
+.vscode/
+
+# Node (for when the scaffold lands — T0.8)
+node_modules/
+dist/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local
+.env
+.env.*
+*.log
