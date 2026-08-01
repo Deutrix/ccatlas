@@ -18,6 +18,7 @@ import {
   renderPlan,
   renderTree,
   renderUpdates,
+  renderUsage,
 } from './cli/render.ts';
 import { envelope } from './json.ts';
 import { doctor } from './services/doctor-run.ts';
@@ -29,6 +30,7 @@ import {
   RELOAD_REMINDER,
 } from './services/apply.ts';
 import { STALE_MARKETPLACE_DAYS } from './services/updates.ts';
+import { usage } from './services/analytics-run.ts';
 import { report, reportAllProjects } from './services/report-run.ts';
 import { updates } from './services/updates-run.ts';
 
@@ -172,6 +174,19 @@ export async function run(argv: readonly string[]): Promise<number> {
         process.stderr.write(`ccatlas: report exceeds the 120KB budget (${kb}KB)
 `);
       }
+      return EXIT_OK;
+    }
+
+    if (parsed.command === 'usage') {
+      const { report: usageReport } = await usage(serviceOptions);
+
+      if (parsed.flags.json) {
+        const payload = envelope(parsed.command, VERSION, usageReport);
+        process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+        return EXIT_OK;
+      }
+
+      process.stdout.write(`${renderUsage(usageReport, renderOptions, parsed.flags.unused)}\n`);
       return EXIT_OK;
     }
 

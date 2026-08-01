@@ -34,6 +34,7 @@ test('a bare command parses with every flag defaulted off', () => {
     open: false,
     allProjects: false,
     allowPaths: false,
+    unused: false,
   });
 });
 

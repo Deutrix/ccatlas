@@ -116,7 +116,7 @@ test('status renders a tree by default and a flat list on request', () => {
 test('--no-color emits no ANSI escapes anywhere', () => {
   const { stdout } = runCli('status', '--cached', '--no-color');
   // eslint-disable-next-line no-control-regex
-  assert.ok(!/\[/.test(stdout), 'piping status into a file must not embed escape codes');
+  assert.ok(!/\u001b\[/.test(stdout), 'piping status into a file must not embed escape codes');
 });
 
 test('--json and --flat together is a usage error, not a silent precedence', () => {

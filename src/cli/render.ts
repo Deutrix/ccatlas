@@ -21,18 +21,19 @@
 
 import type { DoctorReport, Severity } from '../services/doctor.ts';
 import type { ApplyPlan, ExecutedAction } from '../services/apply.ts';
+import type { UsageResult } from '../services/analytics.ts';
 import type { UpdatesReport } from '../services/updates.ts';
 import type { Inventory, MergedPlugin } from '../services/inventory.ts';
 import type { StatusResult } from '../services/status.ts';
 
 /** ANSI, applied only when the caller says colour is wanted. */
 const CODES = {
-  reset: '[0m',
-  dim: '[2m',
-  bold: '[1m',
-  red: '[31m',
-  yellow: '[33m',
-  green: '[32m',
+  reset: '\u001b[0m',
+  dim: '\u001b[2m',
+  bold: '\u001b[1m',
+  red: '\u001b[31m',
+  yellow: '\u001b[33m',
+  green: '\u001b[32m',
 } as const;
 
 type Style = keyof Omit<typeof CODES, 'reset'>;
@@ -492,5 +493,81 @@ export function renderExecuted(
     lines.push('', c('stopped at the first failure; nothing after it was run', 'red'));
   }
 
+  return lines.join('\n');
+}
+
+/**
+ * Renders the usage report.
+ *
+ * `--unused` leads, because it is the headline and it is what the user acts
+ * on. The methodology note prints every time, never behind a flag: two very
+ * different kinds of number sit side by side here, and a reader who assumes
+ * both are measured will over-trust the cost column.
+ */
+export function renderUsage(
+  result: UsageResult,
+  options: RenderOptions,
+  unusedOnly: boolean,
+): string {
+  const c = paint(options.color);
+
+  if (!result.available) {
+    // "Could not read your usage" and "you have not used these" are the same
+    // shape and opposite advice — and the second is acted on by deleting.
+    return [
+      c('ccatlas usage', 'bold'),
+      '',
+      c(`usage is unavailable: ${result.reason}`, 'yellow'),
+      c('  no prune list is shown — an unread transcript is not an unused stack', 'dim'),
+    ].join('\n');
+  }
+
+  const lines = [
+    `${c('ccatlas usage', 'bold')} ${c(
+      `— ${result.totalInvocations} invocations across ${result.scanned.accepted} transcript(s)`,
+      'dim',
+    )}`,
+  ];
+
+  const withCost = result.unused.filter((u) => u.passiveCost !== undefined);
+  const withoutCost = result.unused.filter((u) => u.passiveCost === undefined);
+
+  lines.push('', c(`Never invoked (${result.unused.length})`, 'bold'));
+  if (result.unused.length === 0) {
+    lines.push(c('  everything installed has been used at least once', 'green'));
+  } else {
+    for (const item of withCost) {
+      lines.push(
+        `  ${c(item.kind.padEnd(8), 'dim')} ${item.entity} ${c(
+          `~${item.passiveCost ?? 0} tok always-on`,
+          'yellow',
+        )}`,
+      );
+    }
+
+    // Unmeasured LAST: an unmeasured entity has no established cost, and
+    // putting it at the top of a prune list implies one.
+    const shown = unusedOnly ? withoutCost : withoutCost.slice(0, 15);
+    for (const item of shown) {
+      lines.push(`  ${c(item.kind.padEnd(8), 'dim')} ${item.entity}`);
+    }
+    if (!unusedOnly && withoutCost.length > 15) {
+      lines.push(
+        c(`  … and ${withoutCost.length - 15} more — pass --unused for the full list`, 'dim'),
+      );
+    }
+  }
+
+  if (!unusedOnly && result.records.length > 0) {
+    lines.push('', c('Most used', 'bold'));
+    for (const record of result.records.slice(0, 15)) {
+      lines.push(
+        `  ${String(record.invocations).padStart(5)}  ${c(record.kind.padEnd(8), 'dim')} ${record.entity}` +
+          `${record.owner !== undefined ? c(` (${record.owner})`, 'dim') : ''}`,
+      );
+    }
+  }
+
+  lines.push('', c(result.methodology, 'dim'));
   return lines.join('\n');
 }

@@ -21,7 +21,7 @@ export const GLOBAL_FLAGS = [
   { flag: '--verbose', help: 'include per-section detail and timings' },
 ] as const;
 
-export const COMMANDS = ['status', 'doctor', 'updates', 'report'] as const;
+export const COMMANDS = ['status', 'doctor', 'updates', 'report', 'usage'] as const;
 export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
@@ -65,6 +65,8 @@ export interface Flags {
    * agreeing to something unnamed.
    */
   readonly allowPaths: boolean;
+  /** `usage --unused`. Zero invocations, sorted by what they cost to keep. */
+  readonly unused: boolean;
   /** `report --out <file>`. */
   readonly out?: string;
 }
@@ -88,6 +90,7 @@ const DEFAULTS: Flags = {
   open: false,
   allProjects: false,
   allowPaths: false,
+  unused: false,
 };
 
 /**
@@ -121,6 +124,7 @@ const suggest = (unknown: string): string => {
     '--out',
     '--all-projects',
     '--allow-paths',
+    '--unused',
     '--help',
     '--version',
   ];
@@ -247,6 +251,9 @@ export function parseArgs(
       case '--allow-paths':
         flags.allowPaths = true;
         break;
+      case '--unused':
+        flags.unused = true;
+        break;
       default:
         errors.push(`unknown flag "${arg}".${suggest(arg)}`);
     }
@@ -303,6 +310,7 @@ COMMANDS
   doctor       findings with a severity, a cause, and the exact command to fix it
   updates      version differences, stale pins, and marketplace staleness
   report       a self-contained HTML report you can send to someone
+  usage        what you actually invoke, and what you never do
 
 FLAGS
 ${flagHelp}
@@ -315,6 +323,7 @@ ${flagHelp}
   --out FILE   where to write the report
   --all-projects  one report per known project, plus an index
   --allow-paths   permit --all-projects without --redact (paths WILL be written)
+  --unused     list only what has never been invoked (usage only)
   --help       print this message
   --version    print the version
 
