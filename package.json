@@ -30,6 +30,7 @@
     "leak-scan": "node scripts/leak-scan.mjs",
     "package": "node scripts/build.mjs && node scripts/package.mjs",
     "validate-plugin": "claude plugin validate dist/plugin --strict",
+    "sync-version": "node scripts/sync-version.mjs",
     "token-budget": "node --experimental-strip-types scripts/token-budget.mjs"
   },
   "devDependencies": {

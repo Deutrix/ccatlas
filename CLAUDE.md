@@ -4,13 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current state
 
-**Phase 0. The scaffold exists; no feature does.** `T0.8` has landed — TypeScript → esbuild → single ESM file at `bin/ccatlas`, `node:test`, 3-platform CI — and `src/` implements only `--version`, `--json`, `--help`. Discovery (`T0.1`–`T0.5`) is in flight, and its blockers `T0.1`–`T0.4` are **unanswered**, which means **every CLI JSON shape and transcript record shape described in the docs is an assumption, not an observed fact**.
+**All seven phases are feature-complete.** Eight commands run end to end against a real machine: `status`, `doctor`, `updates`, `usage`, `report`, `export`, `import`, `rollback`. 878 tests; typecheck, leak-scan, `claude plugin validate dist/plugin --strict` and the 📏 600-token budget are all blocking CI gates and all green.
 
-Do not write a parser against any of those shapes until the fixture corpus under `fixtures/` is complete and `FORMATS.md` has been written (`T0.6`). This is the single most likely way to waste a week here.
+Not published to npm. See the README's *Status* table for what remains and why.
 
-Read in this order: `docs/01-prd.md` (what and why) → `docs/02-architecture.md` (how, plus every hard constraint) → `docs/03-diagrams.md` (the same as mermaid) → `docs/tasks.md` (the work).
+**The design documents are not in this repository** — it ships the product, not the planning. The reasoning that matters at the point of use is in the source: every non-obvious decision is commented where it is made, and each module states the invariants it enforces at the top.
 
-**Two task files exist; they are not interchangeable.** `docs/04-tasks.md` is the frozen design-stage breakdown — the origin of the stable task IDs, cited in commits, not edited. `docs/tasks.md` is the **execution ledger** derived from it: the same IDs plus dependencies, wave grouping, parallel-safety, per-task acceptance gates, and a measured baseline of the local machine against the reference scale the perf gates assume. Work from `docs/tasks.md`; cite IDs that trace back to `04-tasks.md`.
+**The fixture corpus under `fixtures/` is the contract.** Every CLI JSON shape and transcript record shape was *observed*, not assumed — `fixtures/**/FINDINGS.md` records what was scanned and what was found. Do not write a parser against a shape that is not in the corpus; that is the single most likely way to waste a week here.
+
+**Run the binary against a real machine after any detector change.** It has caught eight defects that no test did — a prune list recommending the deletion of a plugin used 22 times, a security-critical path unreachable from the arg parser, a 25% undercount from records dropped before a probe resolved. It is the cheapest check available.
 
 ## What ccatlas is
 
@@ -33,9 +35,15 @@ The zero-dependency rule is load-bearing, not stylistic: installed plugins are c
 Two CI gates are defined and are hard requirements, not aspirations:
 
 ```bash
-claude plugin validate . --strict          # manifest/frontmatter/hooks
-claude plugin details ccatlas              # fail the build above 600 always-on tokens
+node scripts/package.mjs                    # stage dist/plugin first
+claude plugin validate dist/plugin --strict # manifest/frontmatter/hooks
+node scripts/token-budget.mjs               # fail the build above 600 always-on tokens
 ```
+
+Validate the **staged** plugin, not the repo root: the root carries this
+`CLAUDE.md`, which `--strict` correctly rejects as a plugin file. Both commands
+write errors to **stdout** with an empty stderr — the exit code is the only
+reliable signal.
 
 Platform matrix is macOS + Linux + **Windows** from Phase 1. No POSIX path assumptions anywhere.
 
@@ -85,7 +93,7 @@ Persistent state goes in `${CLAUDE_PLUGIN_DATA}` (→ `~/.claude/plugins/data/cc
 
 ## Security invariants
 
-These are non-negotiable and each has a task marked 🔒 in `docs/04-tasks.md`:
+These are non-negotiable. Each has tests; none may be relaxed without replacing the guarantee it provides:
 
 - **Secret export fails closed.** If a detected secret can't be safely templated to `${VAR}`, the export fails unless `--allow-secrets` is passed. Detection is the union of three heuristics (known prefixes, Shannon entropy, shape matching). CI runs a 200-config fuzz corpus; any leak fails the build.
 - **Never exported:** `.credentials.json`, `plugins/cache/`, `sessions/`, `history.jsonl`, `todos/`, `statsig/`, shell snapshots. Machine-specific values (`env.*`, model endpoints, Bedrock/Vertex config, absolute paths) are held back into `machines/<host>.json`, not shared.
@@ -96,5 +104,5 @@ These are non-negotiable and each has a task marked 🔒 in `docs/04-tasks.md`:
 ## Conventions
 
 - **Reference task IDs in commits.** They're stable: `feat(P2): T2.4 — flag stale pins`.
-- Task markers in `docs/04-tasks.md`: ⛔ blocker · 🔬 spike · 🔒 security-critical · 📏 hard acceptance number. A phase ships only when all 📏 numbers are met, all 🔒 tasks have tests, `claude plugin validate . --strict` passes, the 3-platform CI matrix is green, and `--json` matches the versioned schema.
+- A change ships only when the 📏 hard numbers are met, the 🔒 security paths have tests, `claude plugin validate dist/plugin --strict` passes, the 3-platform CI matrix is green, and `--json` still matches the versioned schema.
 - Naming: working name `ccatlas` is a find-and-replace away from anything else; nothing in the design depends on it. Avoid "Claude" in any product name (trademark friction, implies official status) — the `cc` prefix sidesteps it.

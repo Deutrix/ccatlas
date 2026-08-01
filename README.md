@@ -156,6 +156,9 @@ extensionless entry point's module type from the nearest `package.json`, so
 Set `version` in **`plugin.json` and `package.json`, never in the marketplace
 entry** — `tests/manifest-consistency.test.mjs` enforces both halves, because
 the repo shipped a 0.0.0/0.5.0 mismatch that made `--version` misreport itself.
+`npm run sync-version` copies the version across in a one-line edit.
+
+Releasing is documented step by step in [`PUBLISHING.md`](./PUBLISHING.md).
 
 ### A note on the transcript adapter
 
@@ -165,21 +168,26 @@ yields `{ available: false, reason }` and degrades the usage section alone.
 
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [`docs/01-prd.md`](./docs/01-prd.md) | What and why |
-| [`docs/02-architecture.md`](./docs/02-architecture.md) | How, plus every hard constraint |
-| [`docs/03-diagrams.md`](./docs/03-diagrams.md) | The same, as mermaid |
-| [`docs/04-tasks.md`](./docs/04-tasks.md) | The frozen breakdown; origin of the stable task IDs |
-| [`docs/tasks.md`](./docs/tasks.md) | The execution ledger — status, gates, and what remains |
+The design documents — PRD, architecture, diagrams and the execution ledger —
+are **not published**. This repository ships the product, not the planning. The
+reasoning that matters at the point of use is in the source: every non-obvious
+decision is commented where it is made, and the invariants are stated at the
+top of the module that enforces them.
 
 ## Status
 
-All seven phases are feature-complete: **138 of 152 tasks**, 859 tests, with
+All seven phases are feature-complete: **138 of 152 tasks**, 878 tests, with
 typecheck, leak-scan, `claude plugin validate --strict` and the 600-token
-budget all clean. What remains — a deferred SQLite index, publishing, and four
-doctor checks blocked on data Claude Code does not expose — is enumerated with
-reasons under *What remains* in [`docs/tasks.md`](./docs/tasks.md).
+budget all clean.
+
+What remains, and why:
+
+| Item | Why |
+|---|---|
+| SQLite analytics index | Deferred with a measured reason — a full 293k-line scan is ~16s, so incremental indexing is not yet earning its complexity |
+| `ccusage` merge | Optional by design, never required |
+| Four `doctor` checks | Blocked on data Claude Code does not expose. `doctor` says so in its own output rather than implying a clean bill of health |
+| End-to-end `status` latency | ~2s against a 2s budget, essentially all `claude` subprocess time |
 
 Not yet published to npm.
 

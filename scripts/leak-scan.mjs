@@ -24,6 +24,7 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 /**
@@ -68,12 +69,46 @@ const CREDENTIAL = [
   [/\b[a-z+]{2,15}:\/\/[^\s:@/"']+:[^\s@/"']+@/g, 'url with inline credentials'],
 ];
 
+/** Escapes a machine-derived string for safe use inside a RegExp. */
+const reEscape = (s) => s.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+
+/**
+ * Whoever is running this, plus the pieces of their machine identity worth
+ * catching. Derived from the OS rather than hardcoded.
+ *
+ * This gate used to name one contributor literally, which meant it protected
+ * exactly that person: anyone else could commit their own username and paths
+ * and the build stayed green. A public repo makes that the common case, not
+ * the edge case.
+ *
+ * Short, generic values are dropped — a username like `dev` or `ci` would match
+ * inside ordinary words and turn every run red. That is a deliberate hole: the
+ * path and email patterns below still fire, and a gate nobody can keep green
+ * gets disabled, which protects nobody at all.
+ */
+function machineIdentity() {
+  const out = [];
+  const add = (value, label) => {
+    if (typeof value === 'string' && value.length >= 4) {
+      out.push([new RegExp(reEscape(value), 'gi'), label]);
+    }
+  };
+
+  try {
+    add(os.userInfo().username, 'username');
+  } catch {
+    // No passwd entry (some containers). The patterns below still apply.
+  }
+  add(os.hostname().split('.')[0], 'hostname');
+  return out;
+}
+
 /** Machine identity. Excused only in allowlisted prose. */
 const IDENTIFIER = [
-  [/alex/gi, 'username'],
-  [/WORKSTN/gi, 'hostname'],
+  ...machineIdentity(),
   [/[A-Za-z]:\\Users\\[A-Za-z0-9._-]+/g, 'windows user path'],
   [/\/mnt\/[a-z]\/Users\/[A-Za-z0-9._-]+/gi, 'wsl user path'],
+  [/\/(?:home|Users)\/[A-Za-z0-9._-]+\//g, 'posix home path'],
   [/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g, 'email'],
 ];
 
