@@ -9,7 +9,7 @@
 
 import process from 'node:process';
 
-import { envelope } from './envelope.js';
+import { envelope } from './json.ts';
 
 const VERSION = __CCATLAS_VERSION__;
 

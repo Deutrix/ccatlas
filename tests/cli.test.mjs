@@ -32,7 +32,7 @@ test('--version prints the version baked in at build time', () => {
   assert.equal(stdout.trim(), pkg.version);
 });
 
-test('--json emits a versioned envelope', () => {
+test('--json emits the one versioned envelope from types.ts', () => {
   const { status, stdout } = runCli('--json');
   assert.equal(status, 0);
 
@@ -41,8 +41,25 @@ test('--json emits a versioned envelope', () => {
   assert.equal(payload.tool, 'ccatlas');
   assert.equal(payload.version, pkg.version);
   assert.equal(payload.command, 'root');
-  assert.ok(Array.isArray(payload.warnings));
   assert.doesNotThrow(() => new Date(payload.generatedAt).toISOString());
+  assert.ok('data' in payload, 'envelope must carry a data slot even when empty');
+
+  // Defect D1: two envelopes existed, one with `warnings: string[]` and one
+  // with structured `Warning[]`. Only the structured one survives, and skills
+  // branch on `code` — so a regression to bare strings must fail here rather
+  // than be discovered downstream.
+  assert.ok(Array.isArray(payload.warnings));
+  for (const warning of payload.warnings) {
+    assert.equal(typeof warning, 'object', 'warnings must be structured, not strings');
+    assert.equal(typeof warning.code, 'string');
+    assert.equal(typeof warning.message, 'string');
+  }
+
+  // The field set is the contract T7.3-T7.5 read. An added field is a
+  // compatible change; a removed one is not.
+  for (const field of ['schemaVersion', 'tool', 'version', 'command', 'generatedAt', 'warnings', 'data']) {
+    assert.ok(field in payload, `envelope is missing ${field}`);
+  }
 });
 
 test('--help prints usage and exits 0', () => {

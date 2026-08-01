@@ -194,7 +194,13 @@ export interface MarketplaceEntity extends Entity {
    * tarball with a .gcs-sha sidecar and no HEAD to read — and it holds 276 of
    * 281 available plugins, so this is the common case.
    */
-  distribution: 'git' | 'gcs' | 'local';
+  /**
+   * `unknown` is not a fourth kind of distribution — it means the clone could
+   * not be probed. Kept distinct from `git` because T2.2 branches on this, and
+   * defaulting an unprobed clone to `git` would send the resolver at a `.git`
+   * directory that is not there.
+   */
+  distribution: 'git' | 'gcs' | 'local' | 'unknown';
   /** Deliberately absent: autoUpdate. No such flag exists. FORMATS.md trap 5. */
 }
 
@@ -256,7 +262,13 @@ export interface CollectorResult<T> {
 }
 
 export interface Collector<T> {
-  readonly name: 'cli' | 'config' | 'mcp' | 'skills' | 'transcripts';
+  /**
+   * `registry` is the sixth, added at T1.8: `installed_plugins.json` carries
+   * `gitCommitSha`, which the CLI does not expose at all, so the file layer is
+   * a genuine second input rather than a fallback. Reconciliation with one
+   * input is not reconciliation. See `collectors/registry.ts`.
+   */
+  readonly name: 'cli' | 'config' | 'mcp' | 'registry' | 'skills' | 'transcripts';
   collect(ctx: CollectContext): Promise<CollectorResult<T>>;
 }
 
