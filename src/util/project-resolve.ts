@@ -38,7 +38,7 @@
  */
 
 import { realpath as realpathCallback } from 'node:fs';
-import { realpath } from 'node:fs/promises';
+import { realpath, stat } from 'node:fs/promises';
 
 import { normaliseProjectPath } from './project-path.ts';
 import type { ProjectRef, Warning } from '../types.ts';
@@ -182,6 +182,37 @@ export async function resolveProjectRefs(
   }
 
   return { refs: resolved, warnings };
+}
+
+/**
+ * Why a path could not be reached — `gone` versus `unreachable`.
+ *
+ * T1.27's orphaned-project finding turns on this distinction and nothing else.
+ * A `~/.claude.json` key whose directory was deleted is an orphan worth
+ * reporting; a key on an unmounted USB disk, a disconnected network share, or
+ * a path the user lacks permission to stat is **not** — and telling someone
+ * their project is gone when the drive is merely unplugged is the kind of
+ * wrong answer that gets a diagnostic tool uninstalled.
+ *
+ * `ENOENT` and `ENOTDIR` mean the path genuinely is not there. Everything else
+ * — `EACCES`, `EPERM`, `EBUSY`, `ENODEV`, `EIO`, a Windows drive that is not
+ * mounted — means the question could not be answered.
+ */
+export type Existence = 'present' | 'gone' | 'unreachable';
+
+const GONE_CODES = new Set(['ENOENT', 'ENOTDIR']);
+
+export async function probeExistence(rawPath: string): Promise<Existence> {
+  const trimmed = rawPath.trim();
+  if (trimmed === '') return 'unreachable';
+
+  try {
+    await stat(trimmed);
+    return 'present';
+  } catch (error: unknown) {
+    const code = (error as { code?: unknown }).code;
+    return typeof code === 'string' && GONE_CODES.has(code) ? 'gone' : 'unreachable';
+  }
 }
 
 /**

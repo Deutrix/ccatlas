@@ -7,6 +7,7 @@
  * one-way layering the whole design rests on.
  */
 
+import path from 'node:path';
 import process from 'node:process';
 
 import { colorDefault, helpText, parseArgs } from './cli/args.ts';
@@ -53,6 +54,10 @@ export async function run(argv: readonly string[]): Promise<number> {
   }
 
   const serviceOptions = {
+    // A project path makes this a scoped run; absent means the global baseline.
+    ...(parsed.flags.project !== undefined
+      ? { target: { kind: 'project' as const, path: path.resolve(parsed.flags.project) } }
+      : {}),
     offline: parsed.flags.offline,
     cached: parsed.flags.cached,
     toolVersion: VERSION,
@@ -61,7 +66,10 @@ export async function run(argv: readonly string[]): Promise<number> {
 
   try {
     if (parsed.command === 'doctor') {
-      const { report } = await doctor({ ...serviceOptions, projectDir: process.cwd() });
+      const { report } = await doctor({
+        ...serviceOptions,
+        projectDir: parsed.flags.project ?? process.cwd(),
+      });
 
       if (parsed.flags.json) {
         // `skipped` travels in the payload, not as a warning: a skill reading

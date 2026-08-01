@@ -160,3 +160,50 @@ test('an explicit --color beats an environment that wanted none', () => {
   const parsed = parseArgs(['status', '--color'], { colorDefault: false });
   assert.equal(parsed.flags.color, true);
 });
+
+// ---------------------------------------------------------------------------
+// --project — the scope axis reaches the surface
+// ---------------------------------------------------------------------------
+
+test('--project takes the next argument as its value', () => {
+  const parsed = run('status', '--project', 'C:/repo');
+  assert.equal(parsed.kind, 'run');
+  assert.equal(parsed.flags.project, 'C:/repo');
+});
+
+test('--project=value works too', () => {
+  assert.equal(run('status', '--project=C:/repo').flags.project, 'C:/repo');
+});
+
+test('a --project VALUE is never mistaken for a command', () => {
+  // `--project .` would otherwise be reported as an unknown command, which is
+  // the failure mode of parsing value-taking flags in the same pass as
+  // positionals.
+  const parsed = run('status', '--project', '.');
+  assert.equal(parsed.kind, 'run');
+  assert.equal(parsed.flags.project, '.');
+});
+
+test('--project with no value is a usage error, not a silent global run', () => {
+  for (const argv of [['status', '--project'], ['status', '--project', '--json']]) {
+    const parsed = parseArgs(argv);
+    assert.equal(parsed.kind, 'error', argv.join(' '));
+    assert.match(parsed.errors[0], /--project needs a directory path/);
+  }
+});
+
+test('no --project means the global baseline', () => {
+  assert.equal(run('status').flags.project, undefined);
+});
+
+test('--project still parses when it precedes the command', () => {
+  const parsed = run('--project', 'C:/repo', 'doctor');
+  assert.equal(parsed.kind, 'run');
+  assert.equal(parsed.command, 'doctor');
+  assert.equal(parsed.flags.project, 'C:/repo');
+});
+
+test('doctor is a known command', () => {
+  assert.equal(run('doctor').kind, 'run');
+  assert.equal(run('doctor').command, 'doctor');
+});

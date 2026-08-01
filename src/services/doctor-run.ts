@@ -17,6 +17,7 @@ import path from 'node:path';
 
 import { enumerateCacheVersions } from '../collectors/registry.ts';
 import { buildDoctorReport } from './doctor.ts';
+import { collectProjects, readTranscriptDirNames, transcriptsRoot } from './projects.ts';
 import { status } from './status.ts';
 import type { CacheVersionDir, DoctorReport, SecretScanTarget } from './doctor.ts';
 import type { StatusOptions } from './status.ts';
@@ -202,12 +203,13 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorRunResu
 
   const skipped: Array<{ check: string; reason: string }> = [];
 
-  const [targets, cacheDirs, existingPaths] = await Promise.all([
+  const [targets, cacheDirs, existingPaths, projects] = await Promise.all([
     secretTargets(home, options.projectDir, skipped),
     enumerateCacheVersions(path.join(home, '.claude', 'plugins', 'cache')) as Promise<
       CacheVersionDir[]
     >,
     resolveExistingPaths(inventory.plugins.map((plugin) => plugin.installPath)),
+    collectKnownProjects(home),
   ]);
 
   return {
@@ -216,7 +218,8 @@ export async function doctor(options: DoctorOptions = {}): Promise<DoctorRunResu
       secretTargets: targets,
       cacheDirs,
       existingPaths,
-      skipped,
+      projectRecords: projects.records,
+      skipped: [...skipped, ...projects.skipped],
     }),
     elapsedMs: inventory.elapsedMs,
     degraded: inventory.degraded,
@@ -230,4 +233,47 @@ async function resolveExistingPaths(
   const defined = [...new Set(paths.filter((p): p is string => p !== undefined))];
   const results = await Promise.all(defined.map(async (p) => [p, await exists(p)] as const));
   return new Set(results.filter(([, present]) => present).map(([p]) => p));
+}
+
+/**
+ * Enumerates known projects for T1.27's orphan check.
+ *
+ * A failure here degrades one check rather than the run:  is
+ * ~193KB of undocumented state, and a machine whose copy will not parse is
+ * exactly the machine someone is running  on.
+ */
+async function collectKnownProjects(home: string): Promise<{
+  records: Array<{ displayPath: string; existence: 'present' | 'gone' | 'unreachable'; collides: boolean }>;
+  skipped: Array<{ check: string; reason: string }>;
+}> {
+  const read = await readJson(path.join(home, '.claude.json'));
+  if (read.status !== 'read') {
+    return {
+      records: [],
+      skipped:
+        read.status === 'unreadable'
+          ? [
+              {
+                check: 'orphaned projects (T1.27)',
+                reason: `~/.claude.json could not be parsed: ${read.reason}`,
+              },
+            ]
+          : [],
+    };
+  }
+
+  const projects = (read.contents as { projects?: Record<string, unknown> }).projects;
+  const claudeJsonKeys = typeof projects === 'object' && projects !== null ? Object.keys(projects) : [];
+  const transcriptDirNames = await readTranscriptDirNames(transcriptsRoot(home));
+
+  const inventory = await collectProjects({ claudeJsonKeys, transcriptDirNames, probe: true });
+
+  return {
+    records: inventory.projects.map((record) => ({
+      displayPath: record.ref.displayPath,
+      existence: record.existence,
+      collides: record.ref.collides,
+    })),
+    skipped: [],
+  };
 }

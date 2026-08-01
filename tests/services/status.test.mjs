@@ -377,3 +377,79 @@ test('a missing config section still yields the fixed inputs', () => {
   assert.ok(inputs.length > 0, 'a degraded config collector must not empty the input list');
   assert.ok(inputs.some((p) => p.endsWith('.claude.json')));
 });
+
+// ---------------------------------------------------------------------------
+// T1.24 — the scope axis
+// ---------------------------------------------------------------------------
+
+test('a project scope adds that repo overlay to the global baseline', async (t) => {
+  const repo = tempState(t);
+  writeFileSync(
+    path.join(repo, '.mcp.json'),
+    JSON.stringify({ mcpServers: { 'repo-only': { command: 'npx', args: ['-y', 'x'] } } }),
+    'utf8',
+  );
+
+  const base = scaleRun(t);
+  const global = await status(base);
+  const scoped = await status({
+    ...scaleRun(t),
+    target: { kind: 'project', path: repo },
+    roots: { home: scaleHome, projectDir: repo },
+  });
+
+  // Scoped is global PLUS the overlay, resolved by the same precedence rules —
+  // not a second pipeline.
+  assert.ok(
+    scoped.inventory.mcpServers.length > global.inventory.mcpServers.length,
+    'the repo .mcp.json server did not reach the scoped inventory',
+  );
+  assert.ok(scoped.inventory.mcpServers.some((s) => s.id.name === 'repo-only'));
+  assert.ok(!global.inventory.mcpServers.some((s) => s.id.name === 'repo-only'));
+});
+
+test('every result names the scope it describes', async (t) => {
+  const global = await status(scaleRun(t));
+  assert.deepEqual(global.target, { kind: 'global' });
+
+  const scoped = await status({ ...scaleRun(t), target: { kind: 'project', path: 'C:/repo' } });
+  assert.deepEqual(scoped.target, { kind: 'project', path: 'C:/repo' });
+});
+
+test('a scoped answer does NOT share the global cache entry', async (t) => {
+  const stateDir = tempState(t);
+  const base = { ...scaleRun(t), stateDir };
+
+  await status(base);
+  const scoped = await status({ ...base, target: { kind: 'project', path: 'C:/repo' }, cached: true });
+
+  // The two are different inventories over largely identical inputs, so a
+  // shared key would serve one as the other whenever the fingerprint matched
+  // — and it usually would.
+  assert.equal(scoped.cacheMiss, 'absent', 'the scoped read hit the global entry');
+});
+
+test('two different projects get two different cache entries', async (t) => {
+  const stateDir = tempState(t);
+  const base = { ...scaleRun(t), stateDir };
+
+  await status({ ...base, target: { kind: 'project', path: 'C:/repo-a' } });
+  const b = await status({ ...base, target: { kind: 'project', path: 'C:/repo-b' }, cached: true });
+
+  assert.equal(b.cacheMiss, 'absent');
+});
+
+test('the scoped input list includes the repo .mcp.json', async (t) => {
+  const repo = tempState(t);
+  const inputs = inventoryInputs(scaleHome, undefined, repo);
+
+  // Read by the mcp collector, not the config collector, so it appears in no
+  // scope report. Without it a scoped answer never invalidates when the repo's
+  // servers change — the one edit a project report exists to notice.
+  assert.ok(inputs.some((p) => p.endsWith('.mcp.json')));
+});
+
+test('the global input list has no project entries', () => {
+  const inputs = inventoryInputs(scaleHome, undefined);
+  assert.ok(!inputs.some((p) => p.endsWith('.mcp.json')));
+});

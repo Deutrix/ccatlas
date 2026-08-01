@@ -61,7 +61,39 @@ import type { CollectContext, McpServerEntity } from '../types.ts';
 /** The cache entry `status` reads and writes. */
 export const STATUS_CACHE_KEY = 'inventory';
 
+/**
+ * Cache entry name for a scope.
+ *
+ * Scoped answers **must not** share the global entry. They are different
+ * inventories over overlapping inputs, so one would serve the other's answer
+ * whenever the fingerprint happened to match — and it usually would, since
+ * most of the input list is identical. The project path is hashed rather than
+ * embedded so the name stays a legal filename on every platform.
+ */
+export function cacheKeyFor(target: ScopeTarget): string {
+  if (target.kind === 'global') return STATUS_CACHE_KEY;
+
+  // FNV-1a. Not cryptographic — this only has to avoid collisions between a
+  // handful of paths on one machine, and pulling in node:crypto for it would
+  // cost more than it buys.
+  let hash = 0x811c9dc5;
+  for (const char of target.path.toLowerCase()) {
+    hash ^= char.charCodeAt(0);
+    hash = Math.imul(hash, 0x01000193) >>> 0;
+  }
+  return `${STATUS_CACHE_KEY}-p${hash.toString(16).padStart(8, '0')}`;
+}
+
 export interface StatusOptions {
+  /**
+   * What to inventory. Defaults to `global`.
+   *
+   * A project target sets the collectors' `projectDir`, which is what makes
+   * `.claude/settings.json` and `.mcp.json` in that repo participate — the
+   * scoped answer is the global one plus that overlay, resolved by the same
+   * precedence rules, not a second pipeline.
+   */
+  readonly target?: ScopeTarget;
   readonly offline?: boolean;
   readonly cached?: boolean;
   /** Overrides discovery roots. Set in tests; never in production. */
@@ -78,8 +110,24 @@ export interface StatusOptions {
   readonly includeMcpList?: boolean;
 }
 
+/**
+ * What a run is scoped to — T1.24.
+ *
+ * `global` is the user + managed baseline: what you get in *any* repo.
+ * A project target adds that repo's overlay on top.
+ *
+ * Modelled as a value rather than a boolean because F9's whole point is that
+ * global is *one value of a scope axis*, not a separate mode — the same
+ * pipeline serves both, and a boolean would invite two code paths that drift.
+ */
+export type ScopeTarget = { readonly kind: 'global' } | { readonly kind: 'project'; readonly path: string };
+
+export const GLOBAL: ScopeTarget = { kind: 'global' };
+
 export interface StatusResult {
   readonly inventory: Inventory;
+  /** The scope this answer describes. */
+  readonly target: ScopeTarget;
   /** `cache` means nothing was collected — the answer is the recorded one. */
   readonly origin: 'collected' | 'cache';
   /** Set when the answer came from cache. */
@@ -122,9 +170,20 @@ function fixedInputs(home: string): string[] {
  * collector reports having consulted. Deduplicated and sorted, so two runs
  * over an unchanged machine produce byte-identical fingerprints.
  */
-export function inventoryInputs(home: string, config: ConfigData | undefined): string[] {
+export function inventoryInputs(
+  home: string,
+  config: ConfigData | undefined,
+  projectDir?: string,
+): string[] {
   const discovered = (config?.scopes ?? []).map((scope) => scope.path);
-  return [...new Set([...fixedInputs(home), ...discovered])].sort();
+
+  // The repo's `.mcp.json` is read by the mcp collector, not by the config
+  // collector, so it appears in no scope report. Without it a scoped answer
+  // never invalidates when the repo's servers change — the one edit a project
+  // report exists to notice.
+  const project = projectDir === undefined ? [] : [path.join(projectDir, '.mcp.json')];
+
+  return [...new Set([...fixedInputs(home), ...discovered, ...project])].sort();
 }
 
 // ---------------------------------------------------------------------------
@@ -146,10 +205,15 @@ async function collect(options: StatusOptions): Promise<Collected> {
     ...(options.fixtureRoot !== undefined ? { fixtureRoot: options.fixtureRoot } : {}),
   };
 
+  // An explicit `roots.projectDir` wins over the target — tests set it to
+  // point at a throwaway tree, and a target would otherwise override them.
+  const projectDir =
+    options.roots?.projectDir ?? (options.target?.kind === 'project' ? options.target.path : undefined);
+
   const roots = {
     roots: {
       ...(options.roots?.home !== undefined ? { home: options.roots.home } : { home }),
-      ...(options.roots?.projectDir !== undefined ? { projectDir: options.roots.projectDir } : {}),
+      ...(projectDir !== undefined ? { projectDir } : {}),
     },
   };
 
@@ -173,7 +237,14 @@ async function collect(options: StatusOptions): Promise<Collected> {
     runCollector<RegistryData>(createRegistryCollector(roots), ctx),
     runCollector<SkillsInventory>({ name: 'skills', collect: (c) => collectSkills(c, roots) }, ctx),
     runCollector<McpServerEntity[]>(
-      createMcpCollector({ claudeJsonPath: path.join(home, '.claude.json') }),
+      createMcpCollector({
+        claudeJsonPath: path.join(home, '.claude.json'),
+        // The repo's own servers. Without this a project scope reports the
+        // global MCP set and calls it the project's.
+        ...(projectDir !== undefined
+          ? { projectMcpJsonPath: path.join(projectDir, '.mcp.json') }
+          : {}),
+      }),
       ctx,
     ),
   ]);
@@ -204,16 +275,20 @@ async function collect(options: StatusOptions): Promise<Collected> {
  * read-only `$HOME` gets a correct, uncached answer and an explanation.
  */
 export async function status(options: StatusOptions = {}): Promise<StatusResult> {
+  const target = options.target ?? GLOBAL;
+  const cacheKey = cacheKeyFor(target);
+
   const cacheOptions = {
     ...(options.stateDir !== undefined ? { stateDir: options.stateDir } : {}),
     ...(options.toolVersion !== undefined ? { toolVersion: options.toolVersion } : {}),
   };
 
   if (options.cached === true) {
-    const read = await readCache<Inventory>(STATUS_CACHE_KEY, cacheOptions);
+    const read = await readCache<Inventory>(cacheKey, cacheOptions);
     if (read.hit) {
       return {
         inventory: read.value,
+        target,
         origin: 'cache',
         cachedAt: read.writtenAt,
         warnings: read.value.warnings,
@@ -230,14 +305,15 @@ export async function status(options: StatusOptions = {}): Promise<StatusResult>
       message:
         `--cached could not be honoured (${read.reason}); this answer was collected fresh. ` +
         'It is correct, but it is not the cached one and did not meet the cached budget.',
-      subject: STATUS_CACHE_KEY,
+      subject: cacheKey,
     };
 
     const warnings = [warning, ...collected.inventory.warnings];
-    const persisted = await persistInventory(collected, options, cacheOptions);
+    const persisted = await persistInventory(collected, options, cacheOptions, cacheKey);
 
     return {
       inventory: { ...collected.inventory, warnings: [...warnings, ...persisted] },
+      target,
       origin: 'collected',
       cacheMiss: read.reason,
       warnings: [...warnings, ...persisted],
@@ -245,11 +321,12 @@ export async function status(options: StatusOptions = {}): Promise<StatusResult>
   }
 
   const collected = await collect(options);
-  const persisted = await persistInventory(collected, options, cacheOptions);
+  const persisted = await persistInventory(collected, options, cacheOptions, cacheKey);
   const warnings = [...collected.inventory.warnings, ...persisted];
 
   return {
     inventory: { ...collected.inventory, warnings },
+    target,
     origin: 'collected',
     warnings,
   };
@@ -267,6 +344,7 @@ export async function persistInventory(
   collected: Collected,
   options: StatusOptions,
   cacheOptions: { stateDir?: string; toolVersion?: string } = {},
+  cacheKey: string = STATUS_CACHE_KEY,
 ): Promise<InventoryWarning[]> {
   // A degraded run is not cached. Recording an answer that is missing a
   // section would serve that hole back for as long as the inputs sit still —
@@ -280,12 +358,14 @@ export async function persistInventory(
         message:
           `not cached: ${collected.inventory.degraded.join(', ')} degraded, and caching a ` +
           'partial answer would serve the hole back until an unrelated file changed.',
-        subject: STATUS_CACHE_KEY,
+        subject: cacheKey,
       },
     ];
   }
 
   const home = options.roots?.home ?? os.homedir();
-  const inputs = inventoryInputs(home, collected.config);
-  return writeCache(STATUS_CACHE_KEY, inputs, collected.inventory, cacheOptions);
+  const projectDir =
+    options.roots?.projectDir ?? (options.target?.kind === 'project' ? options.target.path : undefined);
+  const inputs = inventoryInputs(home, collected.config, projectDir);
+  return writeCache(cacheKey, inputs, collected.inventory, cacheOptions);
 }

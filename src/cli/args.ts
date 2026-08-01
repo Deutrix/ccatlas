@@ -26,6 +26,16 @@ export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
   readonly json: boolean;
+  /**
+   * Scope the run to a project directory. `undefined` means the global
+   * baseline — what you get in any repo.
+   *
+   * Formally T3.12's flag; landed early so Group E's services are reachable
+   * from the binary. Running against the real machine is the check that has
+   * caught most of this project's defects, and a service with no surface
+   * cannot be run that way.
+   */
+  readonly project?: string;
   readonly cached: boolean;
   readonly offline: boolean;
   readonly color: boolean;
@@ -69,7 +79,7 @@ export function colorDefault(env: Record<string, string | undefined>, isTty: boo
 const isFlagLike = (arg: string): boolean => arg.startsWith('-') && arg !== '-';
 
 const suggest = (unknown: string): string => {
-  const known = [...GLOBAL_FLAGS.map((f) => f.flag), '--flat', '--help', '--version'];
+  const known = [...GLOBAL_FLAGS.map((f) => f.flag), '--flat', '--project', '--help', '--version'];
   // Prefix match only. A fuzzy distance would confidently propose `--json`
   // for `--jsom` and also for `--jason`, and a wrong suggestion costs more
   // than none at all.
@@ -99,7 +109,27 @@ export function parseArgs(
     -readonly [K in keyof Flags]: Flags[K];
   } = { ...DEFAULTS, color: options.colorDefault ?? DEFAULTS.color };
 
-  for (const arg of argv) {
+  const args = [...argv];
+
+  for (let index = 0; index < args.length; index += 1) {
+    const arg = args[index] as string;
+
+    // The only value-taking flag. Handled before the switch so the value is
+    // never mistaken for a positional — `--project .` would otherwise be
+    // reported as an unknown command.
+    if (arg === '--project' || arg.startsWith('--project=')) {
+      const inline = arg.startsWith('--project=') ? arg.slice('--project='.length) : undefined;
+      const value = inline ?? args[index + 1];
+      if (inline === undefined) index += 1;
+
+      if (value === undefined || value === '' || isFlagLike(value)) {
+        errors.push('--project needs a directory path');
+        continue;
+      }
+      flags.project = value;
+      continue;
+    }
+
     if (!isFlagLike(arg)) {
       if (command !== undefined) {
         errors.push(`unexpected argument "${arg}" — ${command} takes no positional arguments`);
@@ -187,6 +217,7 @@ COMMANDS
 FLAGS
 ${flagHelp}
   --flat       render a flat list instead of a tree (status only)
+  --project P  scope to a project directory instead of the global baseline
   --help       print this message
   --version    print the version
 

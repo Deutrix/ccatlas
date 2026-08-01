@@ -92,6 +92,7 @@ export type FindingCode =
   | 'shadowed-entity'
   | 'reconciliation-conflict'
   | 'double-declared-version'
+  | 'orphaned-project'
   | 'plugin-validate-failed';
 
 export interface DoctorReport {
@@ -366,6 +367,98 @@ export function orphanedCacheFindings(
 }
 
 // ---------------------------------------------------------------------------
+// T1.18 — `claude plugin validate --strict` on local plugins
+// ---------------------------------------------------------------------------
+
+export interface ValidationResult {
+  /** The plugin or directory validated. */
+  readonly subject: string;
+  readonly path: string;
+  /** Exit code. **The only success signal** — trap 7. */
+  readonly code: number;
+  readonly output: string;
+}
+
+/**
+ * Turns `plugin validate --strict` results into findings.
+ *
+ * **Only local plugins under development.** A marketplace-installed plugin
+ * failing validation is upstream's problem and not something the user can fix,
+ * so reporting it would be handing someone a defect they cannot act on — the
+ * definition of noise in a tool whose findings all carry a fix command.
+ *
+ * `--strict` promotes warnings to errors, which is why the exit code differs
+ * from the plain run on identical input: the captured corpus has the same
+ * manifest exiting **0** ("passed with warnings") without the flag and **1**
+ * with it. The exit code is the only signal read here — trap 7 records that
+ * `plugin details` writes errors to stdout with an empty stderr, and the
+ * inverse for a mispositioned flag, so neither stream classifies reliably.
+ *
+ * The tool's own output is passed through verbatim rather than re-worded.
+ * `claude` already names the offending field and says what to do; paraphrasing
+ * it would add a translation layer that can only lose fidelity.
+ */
+export function validationFindings(results: readonly ValidationResult[]): Finding[] {
+  return results
+    .filter((result) => result.code !== 0)
+    .map((result) => ({
+      code: 'plugin-validate-failed' as const,
+      severity: 'warning' as const,
+      subject: result.subject,
+      message: `\`claude plugin validate --strict\` exited ${result.code}`,
+      cause:
+        'components in a manifest that fails strict validation may silently fail to load, ' +
+        'and the same check runs in CI — this fails there too',
+      // The path, not the plugin name: `validate` takes a directory.
+      fixCommand: `claude plugin validate ${result.path} --strict`,
+    }));
+}
+
+// ---------------------------------------------------------------------------
+// T1.27 — project records whose directory is gone
+// ---------------------------------------------------------------------------
+
+/**
+ * `~/.claude.json` keys whose directory no longer exists.
+ *
+ * **Only `gone`, never `unreachable`.** The two are separated upstream in
+ * `probeExistence` precisely for this: a key on an unmounted USB disk, a
+ * disconnected share, or a path the user cannot stat is not a deleted project,
+ * and telling someone their work is gone when the drive is merely unplugged is
+ * how a diagnostic loses the user's trust in one line. Measured on the
+ * reference machine: 5 gone out of 93.
+ *
+ * Severity is `info`. A stale key costs a little file size and nothing else —
+ * it is housekeeping, not breakage — and `~/.claude.json` accumulating entries
+ * for directories that have since moved is completely ordinary.
+ *
+ * There is deliberately **no fix command**. Editing `~/.claude.json` by hand
+ * is not something to recommend casually — it is ~193KB of undocumented state
+ * that Claude Code rewrites — and no `claude` subcommand prunes project keys.
+ * An honest absence beats a plausible `jq` incantation.
+ */
+export function orphanedProjectFindings(
+  records: ReadonlyArray<{
+    readonly displayPath: string;
+    readonly existence: 'present' | 'gone' | 'unreachable';
+    readonly collides?: boolean;
+  }>,
+): Finding[] {
+  return records
+    .filter((record) => record.existence === 'gone')
+    .map((record) => ({
+      code: 'orphaned-project' as const,
+      severity: 'info' as const,
+      subject: record.displayPath,
+      message: 'recorded in ~/.claude.json but the directory no longer exists',
+      cause:
+        'a moved or deleted project leaves its key behind; the entry keeps whatever ' +
+        'per-project state it held and will never be used again',
+      scope: 'user',
+    }));
+}
+
+// ---------------------------------------------------------------------------
 // Findings the inventory already computed
 // ---------------------------------------------------------------------------
 
@@ -438,6 +531,20 @@ export interface DoctorInputs {
   readonly cacheDirs?: readonly CacheVersionDir[];
   /** Install paths confirmed present on disk. The caller does the IO. */
   readonly existingPaths?: ReadonlySet<string>;
+  /** `plugin validate --strict` results for local plugins under development. */
+  readonly validations?: readonly ValidationResult[];
+  /** Project records from T1.25, for the orphaned-project check. */
+  readonly projectRecords?: ReadonlyArray<{
+    readonly displayPath: string;
+    readonly existence: 'present' | 'gone' | 'unreachable';
+    readonly collides?: boolean;
+  }>;
+  /**
+   * Scope every finding belongs to, for a project report. Applied to findings
+   * that did not set one themselves, so a detector that knows its own scope
+   * keeps it.
+   */
+  readonly scope?: string;
   /** Checks the caller could not run, with the reason. */
   readonly skipped?: ReadonlyArray<{ readonly check: string; readonly reason: string }>;
 }
@@ -476,6 +583,8 @@ export function buildDoctorReport(inputs: DoctorInputs): DoctorReport {
     ...pluginInstallFindings(inputs.inventory, inputs.existingPaths ?? new Set()),
     ...mcpFindings(inputs.inventory),
     ...orphanedCacheFindings(inputs.cacheDirs ?? [], installedPaths),
+    ...orphanedProjectFindings(inputs.projectRecords ?? []),
+    ...validationFindings(inputs.validations ?? []),
     ...inventoryFindings(inputs.inventory),
   ]);
 

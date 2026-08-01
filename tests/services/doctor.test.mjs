@@ -26,10 +26,12 @@ import {
   inventoryFindings,
   mcpFindings,
   orphanedCacheFindings,
+  orphanedProjectFindings,
   pluginInstallFindings,
   secretFindings,
   sortFindings,
   UNIMPLEMENTED_CHECKS,
+  validationFindings,
 } from '../../src/services/doctor.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -471,4 +473,108 @@ test('the real fixture corpus contains no plaintext secrets', async () => {
   const findings = secretFindings([{ file: 'plugin-list.json', contents: cli.data }]);
 
   assert.deepEqual(findings, [], `false positives: ${findings.map((f) => f.subject).join(', ')}`);
+});
+
+// ---------------------------------------------------------------------------
+// T1.27 — orphaned projects, and the gone/unreachable distinction
+// ---------------------------------------------------------------------------
+
+test('a project whose directory is GONE is a finding', () => {
+  const findings = orphanedProjectFindings([
+    { displayPath: 'C:\Users\me\Desktop\deleted', existence: 'gone' },
+  ]);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].code, 'orphaned-project');
+  assert.equal(findings[0].severity, 'info', 'a stale key is housekeeping, not breakage');
+  assert.equal(findings[0].scope, 'user');
+});
+
+test('an UNREACHABLE project is NOT a finding — the distinction that matters', () => {
+  // An unmounted USB disk, a disconnected share, a path the user cannot stat.
+  // Telling someone their project is gone when the drive is merely unplugged
+  // is how a diagnostic loses the user's trust in one line.
+  assert.deepEqual(
+    orphanedProjectFindings([{ displayPath: 'Z:\on-a-detached-drive', existence: 'unreachable' }]),
+    [],
+  );
+});
+
+test('a present project is never reported — the negative case', () => {
+  assert.deepEqual(
+    orphanedProjectFindings([{ displayPath: 'C:\real\project', existence: 'present' }]),
+    [],
+  );
+});
+
+test('an orphaned project offers NO fix command', () => {
+  const findings = orphanedProjectFindings([{ displayPath: 'C:\gone', existence: 'gone' }]);
+
+  // Hand-editing ~/.claude.json is not something to recommend casually — it is
+  // ~193KB of undocumented state that Claude Code rewrites — and no `claude`
+  // subcommand prunes project keys.
+  assert.equal(findings[0].fixCommand, undefined);
+});
+
+test('a mixed set reports only the gone ones', () => {
+  const findings = orphanedProjectFindings([
+    { displayPath: 'a', existence: 'present' },
+    { displayPath: 'b', existence: 'gone' },
+    { displayPath: 'c', existence: 'unreachable' },
+    { displayPath: 'd', existence: 'gone' },
+  ]);
+
+  assert.deepEqual(findings.map((f) => f.subject), ['b', 'd']);
+});
+
+test('project records reach the composed report', () => {
+  const report = buildDoctorReport({
+    inventory: emptyInventory(),
+    projectRecords: [{ displayPath: 'C:\gone', existence: 'gone' }],
+  });
+
+  assert.ok(report.findings.some((f) => f.code === 'orphaned-project'));
+  assert.equal(report.counts.info, 1);
+});
+
+// ---------------------------------------------------------------------------
+// T1.18 — plugin validate --strict
+// ---------------------------------------------------------------------------
+
+test('a non-zero validate exit is a finding carrying the runnable command', () => {
+  const findings = validationFindings([
+    { subject: 'my-plugin', path: 'C:/dev/my-plugin', code: 1, output: '⚠ Found 1 warning' },
+  ]);
+
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].code, 'plugin-validate-failed');
+  assert.equal(findings[0].severity, 'warning');
+  // The PATH, not the plugin name — `validate` takes a directory.
+  assert.equal(findings[0].fixCommand, 'claude plugin validate C:/dev/my-plugin --strict');
+  assert.match(findings[0].cause, /CI/);
+});
+
+test('exit 0 is never a finding, however alarming the output — the negative case', () => {
+  // The captured corpus has the SAME manifest exiting 0 without --strict and 1
+  // with it, printing "⚠ Found 1 warning" both times. The exit code is the
+  // only signal read; trap 7 records that neither stream classifies reliably.
+  assert.deepEqual(
+    validationFindings([
+      { subject: 'p', path: 'C:/p', code: 0, output: '⚠ Found 1 warning\n✔ Validation passed with warnings' },
+    ]),
+    [],
+  );
+});
+
+test('validations reach the composed report', () => {
+  const report = buildDoctorReport({
+    inventory: emptyInventory(),
+    validations: [{ subject: 'p', path: 'C:/p', code: 1, output: '' }],
+  });
+
+  assert.ok(report.findings.some((f) => f.code === 'plugin-validate-failed'));
+});
+
+test('no validations means no findings and no crash', () => {
+  assert.deepEqual(validationFindings([]), []);
 });
