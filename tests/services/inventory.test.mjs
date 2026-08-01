@@ -17,6 +17,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { createCliCollector } from '../../src/collectors/cli.ts';
+import { collectConfig, SETTINGS_PRECEDENCE } from '../../src/collectors/config.ts';
 import { createRegistryCollector } from '../../src/collectors/registry.ts';
 import { runCollector } from '../../src/collectors/isolate.ts';
 import {
@@ -26,6 +27,7 @@ import {
   mergePlugins,
   reconcile,
   resolveVersion,
+  SCOPE_RANK,
 } from '../../src/services/inventory.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -400,7 +402,7 @@ test('a failed collector degrades one section and names it', () => {
       data: null,
       mode: 'threw',
       error: { code: 'x', message: 'boom' },
-      warnings: [],
+      warnings: [{ code: 'collector-failed', message: 'cli: boom', subject: 'cli' }],
       elapsedMs: 1,
     },
     registry: {
@@ -469,4 +471,145 @@ test('an absent collector is not the same as a failed one', () => {
 
   assert.deepEqual(inventory.degraded, [], 'a section that was never asked for is not degraded');
   assert.deepEqual(inventory.plugins, []);
+});
+
+// ---------------------------------------------------------------------------
+// Warnings must survive the service layer
+// ---------------------------------------------------------------------------
+
+test('a failed section carries its REASON, not just its name', () => {
+  const inventory = buildInventory({
+    cli: {
+      name: 'cli',
+      status: 'failed',
+      ok: false,
+      data: null,
+      mode: 'timeout',
+      error: { code: 'collector-timeout', message: 'timed out after 60000ms' },
+      warnings: [
+        { code: 'collector-failed', message: 'cli: timed out after 60000ms', subject: 'cli' },
+      ],
+      elapsedMs: 60_000,
+    },
+  });
+
+  // `degraded: ['cli']` with the message dropped defeats isolate.ts's own
+  // guarantee that a degraded section explains its own emptiness — and the
+  // loss is invisible, because the section name still looks right.
+  const failure = inventory.warnings.find((w) => w.code === 'collector-failed');
+  assert.ok(failure, 'the reason vanished between the collector and the inventory');
+  assert.match(failure.message, /timed out/);
+  assert.equal(failure.collector, 'cli', 'warnings are tagged with the section they came from');
+});
+
+test('a partial section carries its reason too', async () => {
+  const registry = await runCollector(createRegistryCollector(), ctx);
+  const inventory = buildInventory({ registry });
+
+  // The registry collector announces that it did not probe the clones. That
+  // warning is what stops a surface rendering `distribution: unknown` as a
+  // fact about the machine.
+  assert.ok(
+    inventory.warnings.some((w) => w.code === 'partial' && w.message.includes('not probed')),
+    'the collector said something the inventory failed to pass on',
+  );
+});
+
+test('the natural call harvests warnings; extraWarnings does not double them', async () => {
+  const registry = await runCollector(createRegistryCollector(), ctx);
+
+  const plain = buildInventory({ registry });
+  const withExtra = buildInventory({
+    registry,
+    extraWarnings: [{ code: 'partial', message: 'transcripts unavailable', collector: 'transcripts' }],
+  });
+
+  // `extraWarnings` is for collectors NOT passed above. Threading aggregate()'s
+  // full list through it would report every warning twice, so the field is
+  // documented as supplemental and tested as such.
+  assert.equal(withExtra.warnings.length, plain.warnings.length + 1);
+  assert.ok(withExtra.warnings.some((w) => w.collector === 'transcripts'));
+});
+
+// ---------------------------------------------------------------------------
+// Composition against the real config collector
+// ---------------------------------------------------------------------------
+
+test('enabledPlugins is keyed <plugin>@<marketplace> — verified, not assumed', async () => {
+  const scaleHome = path.join(fixtureRoot, 'synthetic', 'scale', 'tree', 'home');
+  const config = await runCollector(
+    { name: 'config', collect: (c) => collectConfig(c, { roots: { home: scaleHome } }) },
+    { offline: true },
+  );
+
+  assert.equal(config.status, 'ok');
+  const keys = Object.keys(config.data.enabledPlugins);
+  assert.ok(keys.length > 0, 'the scale tree must declare enabledPlugins or this proves nothing');
+
+  // If the key form differed from `plugin.id.name`, the enabled reconciliation
+  // would silently never fire and every hand-built test would still pass.
+  for (const key of keys) {
+    assert.match(key, /^[^@]+@[^@]+$/, `enabledPlugins key "${key}" is not <plugin>@<marketplace>`);
+  }
+});
+
+test('the real config collector reconciles enabled against the registry layer', async () => {
+  const scaleHome = path.join(fixtureRoot, 'synthetic', 'scale', 'tree', 'home');
+  const roots = { roots: { home: scaleHome } };
+
+  const config = await runCollector(
+    { name: 'config', collect: (c) => collectConfig(c, roots) },
+    { offline: true },
+  );
+  const registry = await runCollector(createRegistryCollector(roots), { offline: true });
+
+  const enabledKeys = Object.keys(config.data.enabledPlugins);
+  const [firstKey] = enabledKeys;
+
+  // A CLI row asserting the OPPOSITE of what settings declare, keyed exactly
+  // as the real settings file keys it. This is the end-to-end proof that the
+  // branch is reachable with production key spellings.
+  const declared = config.data.enabledPlugins[firstKey].value;
+  const inventory = buildInventory({
+    cli: {
+      name: 'cli',
+      status: 'ok',
+      ok: true,
+      data: {
+        plugins: [
+          cliRow({
+            id: { name: firstKey, scope: 'user', kind: 'plugin' },
+            enabled: !declared,
+          }),
+        ],
+        available: [],
+        marketplaces: [],
+        mcpServers: [],
+      },
+      warnings: [],
+      elapsedMs: 1,
+    },
+    config,
+    registry,
+  });
+
+  const conflict = inventory.warnings.find(
+    (w) => w.code === 'reconciliation' && w.subject === firstKey,
+  );
+  assert.ok(conflict, `no enabled conflict raised for ${firstKey}`);
+
+  const plugin = inventory.plugins.find((p) => p.id.name === firstKey);
+  assert.equal(plugin.reconciled.enabled.conflictsWith.value, declared);
+});
+
+// ---------------------------------------------------------------------------
+// Precedence must not drift from the settings resolver
+// ---------------------------------------------------------------------------
+
+test('shadowing precedence is DERIVED from SETTINGS_PRECEDENCE, not copied', () => {
+  // Two hand-written constants with a comment claiming they agree is how they
+  // stop agreeing. Asserted so a change to one is a failure, not a divergence.
+  assert.deepEqual(SCOPE_RANK, [...SETTINGS_PRECEDENCE].reverse());
+  assert.equal(SCOPE_RANK[0], 'managed', 'managed must outrank everything');
+  assert.equal(SCOPE_RANK[SCOPE_RANK.length - 1], 'user');
 });
