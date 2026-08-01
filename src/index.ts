@@ -10,8 +10,9 @@
 import process from 'node:process';
 
 import { colorDefault, helpText, parseArgs } from './cli/args.ts';
-import { renderFlat, renderTree } from './cli/render.ts';
+import { renderDoctor, renderFlat, renderTree } from './cli/render.ts';
 import { envelope } from './json.ts';
+import { doctor } from './services/doctor-run.ts';
 import { status } from './services/status.ts';
 
 const VERSION = __CCATLAS_VERSION__;
@@ -51,12 +52,31 @@ export async function run(argv: readonly string[]): Promise<number> {
     return EXIT_USAGE;
   }
 
+  const serviceOptions = {
+    offline: parsed.flags.offline,
+    cached: parsed.flags.cached,
+    toolVersion: VERSION,
+  };
+  const renderOptions = { color: parsed.flags.color, verbose: parsed.flags.verbose };
+
   try {
-    const result = await status({
-      offline: parsed.flags.offline,
-      cached: parsed.flags.cached,
-      toolVersion: VERSION,
-    });
+    if (parsed.command === 'doctor') {
+      const { report } = await doctor({ ...serviceOptions, projectDir: process.cwd() });
+
+      if (parsed.flags.json) {
+        // `skipped` travels in the payload, not as a warning: a skill reading
+        // this needs to distinguish "checked and clean" from "not checked",
+        // and a warnings array is the wrong place to make that decidable.
+        const payload = envelope(parsed.command, VERSION, report);
+        process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+        return EXIT_OK;
+      }
+
+      process.stdout.write(`${renderDoctor(report, renderOptions)}\n`);
+      return EXIT_OK;
+    }
+
+    const result = await status(serviceOptions);
 
     if (parsed.flags.json) {
       // The envelope is the contract skills read. Serialised straight from the
@@ -67,8 +87,9 @@ export async function run(argv: readonly string[]): Promise<number> {
       return EXIT_OK;
     }
 
-    const options = { color: parsed.flags.color, verbose: parsed.flags.verbose };
-    const text = parsed.flags.flat ? renderFlat(result, options) : renderTree(result, options);
+    const text = parsed.flags.flat
+      ? renderFlat(result, renderOptions)
+      : renderTree(result, renderOptions);
     process.stdout.write(`${text}\n`);
     return EXIT_OK;
   } catch (error: unknown) {

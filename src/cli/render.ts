@@ -19,6 +19,7 @@
  * zero, and warnings are printed rather than counted.
  */
 
+import type { DoctorReport, Severity } from '../services/doctor.ts';
 import type { Inventory, MergedPlugin } from '../services/inventory.ts';
 import type { StatusResult } from '../services/status.ts';
 
@@ -226,6 +227,62 @@ export function renderTree(result: StatusResult, options: RenderOptions): string
 
   lines.push(...sectionLines(inventory, options));
   lines.push(...warningLines(inventory, options));
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Doctor — T1.19's contract, rendered
+// ---------------------------------------------------------------------------
+
+const SEVERITY_STYLE: Record<Severity, Style> = {
+  critical: 'red',
+  warning: 'yellow',
+  info: 'dim',
+};
+
+/**
+ * Renders findings.
+ *
+ * The `fixCommand` is printed on its own line and never wrapped or truncated:
+ * it exists to be copied, and a command that has been elided is worse than no
+ * command, because it looks runnable.
+ */
+export function renderDoctor(report: DoctorReport, options: RenderOptions): string {
+  const c = paint(options.color);
+  const { critical, warning, info } = report.counts;
+
+  const summary =
+    report.findings.length === 0
+      ? c('no findings', 'green')
+      : `${critical} critical · ${warning} warning · ${info} info`;
+
+  const lines = [`${c('ccatlas doctor', 'bold')} ${c(`— ${summary}`, 'dim')}`];
+
+  for (const finding of report.findings) {
+    lines.push('');
+    lines.push(
+      `${c(finding.severity.toUpperCase(), SEVERITY_STYLE[finding.severity])} ` +
+        `${c(finding.code, 'dim')} ${finding.subject}`,
+    );
+    lines.push(`  ${finding.message}`);
+    // The consequence, not a restatement — a finding the user cannot weigh is
+    // a finding they will skip.
+    lines.push(`  ${c(finding.cause, 'dim')}`);
+
+    if (finding.fixCommand !== undefined) {
+      for (const line of finding.fixCommand.split('\n')) lines.push(`  ${c(line, 'green')}`);
+    }
+  }
+
+  // Always shown, even when everything passed: "no findings" over a run that
+  // skipped four checks is a clean bill of health it did not earn.
+  if (report.skipped.length > 0) {
+    lines.push('', c('Not checked', 'bold'));
+    for (const skip of report.skipped) {
+      lines.push(`  ${c(skip.check, 'dim')} — ${skip.reason}`);
+    }
+  }
+
   return lines.join('\n');
 }
 

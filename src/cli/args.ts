@@ -21,7 +21,7 @@ export const GLOBAL_FLAGS = [
   { flag: '--verbose', help: 'include per-section detail and timings' },
 ] as const;
 
-export const COMMANDS = ['status'] as const;
+export const COMMANDS = ['status', 'doctor'] as const;
 export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
@@ -182,6 +182,7 @@ USAGE
 
 COMMANDS
   status       what is installed, from where, and whether it agrees with itself
+  doctor       findings with a severity, a cause, and the exact command to fix it
 
 FLAGS
 ${flagHelp}
