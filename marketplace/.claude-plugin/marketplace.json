@@ -1,0 +1,19 @@
+{
+  "name": "deutrix",
+  "owner": {
+    "name": "Deutrix"
+  },
+  "metadata": {
+    "description": "Deutrix plugins for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "ccatlas",
+      "description": "Inventory, freshness, usage ROI and portability for your Claude Code stack. Finds stale pins that `/plugin update` reports as up to date.",
+      "source": {
+        "source": "npm",
+        "package": "ccatlas"
+      }
+    }
+  ]
+}

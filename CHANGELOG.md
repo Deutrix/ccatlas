@@ -1,29 +1,47 @@
 # Changelog
 
-All notable changes to this project are documented in this file.
+## 0.5.0 — unreleased
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+First feature-complete build. Six commands, all verified against a real
+machine rather than only against fixtures.
 
-## [Unreleased]
+### Commands
 
-### Added
+- `status` — what is installed, from where, and whether the CLI and the config
+  files agree. `--project <path>` scopes it to one repo.
+- `doctor` — findings with a severity, a cause and the exact fix command, plus
+  an explicit list of checks that did **not** run.
+- `updates` — version differences, marketplace staleness, and **stale pins**.
+- `usage` — invocation counts and `--unused`, the prune list.
+- `report` — a self-contained HTML report, `--redact` before sharing.
+- `export` / `import` / `rollback` — portable bundles, dry-run by default.
 
-- **T0.8 — repo scaffold.** TypeScript source bundled by esbuild to a single
-  minified ESM file at `bin/ccatlas`; `node:test` test runner; `tsc --noEmit`
-  typecheck; 3-platform × 2-Node-version GitHub Actions matrix. Zero runtime
-  dependencies — `package.json` declares no `dependencies` block, and a test
-  asserts the bundle imports nothing outside `node:*`.
-  - Node floor set to `^22.13.0 || >=24.0.0`, the range in which `node:sqlite`
-    is available without a flag (required by T4.2).
-  - `ccatlas --version` and `ccatlas --json` implemented as toolchain proof
-    only. The `--json` envelope carries `schemaVersion: 1`; its field set is
-    **not** the frozen schema — see T0.7 and T1.20/T1.22.
-  - CI steps for `claude plugin validate . --strict` and
-    `claude plugin details ccatlas` are wired but **non-blocking**: there is no
-    `plugin.json` yet (T7.1) and nothing published to measure (T7.6). The
-    600-always-on-token ceiling is named as a constant but not yet enforced,
-    because the output grammar of `plugin details` is still under discovery
-    (T0.2).
+### The finding that motivates the project
 
-[Unreleased]: https://github.com/deutrix/ccatlas/compare/HEAD...HEAD
+A **stale pin** is a plugin whose version string has not moved while the
+source it points at has. `/plugin update` reports *already at the latest
+version* and the user keeps running old code. On the development machine, 2 of
+5 installed plugins were in this state.
+
+It turned out to be detectable with **zero network access**: the marketplace
+clone already on disk carries each entry's `source.sha`, and
+`installed_plugins.json` carries the `gitCommitSha` that actually landed.
+
+### Security posture
+
+- Export **fails closed** — a credential that cannot be templated to `${VAR}`
+  refuses the export rather than warning.
+- **Claude may never apply a remote bundle.** No trusted host, flag or setting
+  changes this. There is no `--yes`.
+- `report --redact` and `--all-projects` protect paths, and the latter refuses
+  to run without redaction.
+- Zero telemetry. `--offline` guarantees zero egress.
+
+### Known limitations
+
+- End-to-end `status` is ~2s, essentially all of it `claude` subprocess time.
+- `report --all-projects` re-collects per project; slow on many projects.
+- Four doctor checks are blocked on data Claude Code does not expose. They are
+  listed in the command's own output rather than silently skipped.
+- Token costs are estimates from Claude Code's estimator, which falls back
+  silently across regimes ~40% apart. Every surface says so.
