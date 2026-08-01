@@ -20,6 +20,7 @@
  * is and who they work for in one string.
  */
 
+import type { UsageResult } from './analytics.ts';
 import type { DoctorReport } from './doctor.ts';
 import type { Inventory } from './inventory.ts';
 import type { UpdatesReport } from './updates.ts';
@@ -28,6 +29,7 @@ export interface ReportInput {
   readonly inventory: Inventory;
   readonly doctor?: DoctorReport;
   readonly updates?: UpdatesReport;
+  readonly usage?: UsageResult;
   readonly generatedAt: string;
   readonly toolVersion: string;
   readonly redact: boolean;
@@ -115,44 +117,115 @@ export function inlineJson(value: unknown): string {
   );
 }
 
+/**
+ * The whole stylesheet, inlined.
+ *
+ * No CDN, no webfont, no external anything: the report is opened from disk and
+ * routinely emailed around, so a remote reference would either fail to load or
+ * silently phone home from someone else's machine — and "zero telemetry" has to
+ * survive the artefact being forwarded.
+ *
+ * Both colour schemes are defined because a report generated on one machine is
+ * read on another; `prefers-color-scheme` is the only signal available without
+ * a preference store.
+ */
 const CSS = `
-:root{--bg:#fff;--fg:#1a1a1a;--dim:#666;--line:#e3e3e3;--card:#fafafa;
---red:#c0392b;--amber:#b7791f;--green:#2b7a3d;--blue:#2b5f9e}
-@media(prefers-color-scheme:dark){:root{--bg:#16181c;--fg:#e6e6e6;--dim:#9aa0a6;
---line:#2c2f36;--card:#1d2026;--red:#ff6b5e;--amber:#e0a34a;--green:#5fcf7d;--blue:#6aa9ff}}
+:root{--bg:#fff;--fg:#15171a;--dim:#5c6370;--line:#e6e8eb;--card:#f7f8fa;
+--raise:#fff;--shadow:0 1px 2px rgba(16,24,40,.05),0 1px 3px rgba(16,24,40,.06);
+--red:#c0392b;--amber:#b7791f;--green:#2b7a3d;--blue:#2b5f9e;--accent:#4f46e5}
+@media(prefers-color-scheme:dark){:root{--bg:#111317;--fg:#e8eaed;--dim:#98a0ac;
+--line:#282c34;--card:#181b21;--raise:#1b1f26;--shadow:0 1px 2px rgba(0,0,0,.4);
+--red:#ff6b5e;--amber:#e0a34a;--green:#5fcf7d;--blue:#6aa9ff;--accent:#8b85f5}}
 *{box-sizing:border-box}
-body{margin:0;padding:2rem 1.25rem;background:var(--bg);color:var(--fg);
-font:14px/1.55 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
-main{max-width:60rem;margin:0 auto}
-h1{font-size:1.4rem;margin:0 0 .2rem}h2{font-size:1rem;margin:2rem 0 .6rem;
-padding-bottom:.3rem;border-bottom:1px solid var(--line)}
-.sub{color:var(--dim);margin:0 0 1.5rem}
-.totals{display:flex;flex-wrap:wrap;gap:.6rem;margin:0 0 1rem;padding:0;list-style:none}
-.totals li{flex:1 1 7rem;padding:.6rem .7rem;background:var(--card);
-border:1px solid var(--line);border-radius:6px}
-.totals b{display:block;font-size:1.5rem;font-weight:600}
-.totals span{color:var(--dim);font-size:.8rem}
-table{width:100%;border-collapse:collapse;font-size:.86rem}
-th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--line);
-vertical-align:top}
-th{color:var(--dim);font-weight:600;cursor:pointer;user-select:none;white-space:nowrap}
-th:hover{color:var(--fg)}
-code{font:12px/1.4 ui-monospace,SFMono-Regular,Consolas,monospace;
-background:var(--card);padding:.1rem .3rem;border-radius:3px}
-.critical{color:var(--red);font-weight:600}.warning{color:var(--amber)}
+body{margin:0;padding:2.5rem 1.25rem 4rem;background:var(--bg);color:var(--fg);
+font:14px/1.6 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+main{max-width:64rem;margin:0 auto}
+
+/* Header */
+h1{font-size:1.55rem;font-weight:650;letter-spacing:-.02em;margin:0 0 .25rem;
+display:flex;align-items:center;gap:.5rem}
+h1::before{content:"";width:.55rem;height:1.35rem;border-radius:3px;
+background:linear-gradient(160deg,var(--accent),var(--blue))}
+h2{font-size:.78rem;font-weight:650;text-transform:uppercase;letter-spacing:.07em;
+color:var(--dim);margin:2.5rem 0 .75rem;padding-bottom:.4rem;
+border-bottom:1px solid var(--line)}
+.sub{color:var(--dim);margin:0 0 2rem;font-size:.85rem}
+
+/* Summary cards */
+.totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));
+gap:.65rem;margin:0 0 1rem;padding:0;list-style:none}
+.totals li{padding:.8rem .85rem;background:var(--raise);border:1px solid var(--line);
+border-radius:10px;box-shadow:var(--shadow)}
+.totals b{display:block;font-size:1.75rem;font-weight:650;letter-spacing:-.03em;
+line-height:1.1}
+.totals span{color:var(--dim);font-size:.75rem;text-transform:uppercase;
+letter-spacing:.05em}
+
+/* Tables */
+.wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;
+background:var(--raise);box-shadow:var(--shadow)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{text-align:left;padding:.55rem .7rem;vertical-align:top}
+thead th{position:sticky;top:0;z-index:1;background:var(--card);color:var(--dim);
+font-weight:600;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;
+cursor:pointer;user-select:none;white-space:nowrap;border-bottom:1px solid var(--line)}
+thead th:hover{color:var(--fg)}
+thead th::after{content:"";opacity:.35;margin-left:.35rem}
+thead th[data-asc="1"]::after{content:"^";opacity:1}
+thead th[data-asc="0"]::after{content:"v";opacity:1}
+tbody tr+tr td{border-top:1px solid var(--line)}
+tbody tr:hover{background:var(--card)}
+code{font:12px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;
+background:var(--card);border:1px solid var(--line);padding:.08rem .32rem;
+border-radius:4px;white-space:nowrap}
+
+/* Severity, as a labelled dot rather than colour alone — colour is not
+   readable to every reader, and this report gets forwarded. */
+.critical,.warning,.info,.ok{font-size:.72rem;font-weight:650;
+text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.critical{color:var(--red)}.warning{color:var(--amber)}
 .info{color:var(--dim)}.ok{color:var(--green)}
-.bar{display:flex;height:1.1rem;border-radius:3px;overflow:hidden;
-background:var(--card);border:1px solid var(--line);margin:.2rem 0 .1rem}
-.bar div{min-width:2px}
-.legend{display:flex;flex-wrap:wrap;gap:.5rem 1rem;padding:0;margin:.4rem 0 0;
-list-style:none;font-size:.8rem;color:var(--dim)}
-.legend i{display:inline-block;width:.6rem;height:.6rem;border-radius:2px;
-margin-right:.3rem;vertical-align:baseline}
-.note{color:var(--dim);font-size:.8rem;margin:.4rem 0 0}
+td.critical::before,td.warning::before,td.info::before{content:"\\25CF";
+margin-right:.35rem;font-size:.85em}
+span.info{font-size:.8rem;font-weight:400;text-transform:none;letter-spacing:0}
+
+/* Context-budget bar */
+.bar{display:flex;height:1.4rem;border-radius:6px;overflow:hidden;
+background:var(--card);border:1px solid var(--line);margin:.3rem 0 .2rem}
+.bar div{min-width:2px;transition:filter .15s}
+.bar div:hover{filter:brightness(1.15)}
+.legend{display:flex;flex-wrap:wrap;gap:.4rem 1.1rem;padding:0;margin:.6rem 0 0;
+list-style:none;font-size:.78rem;color:var(--dim)}
+.legend i{display:inline-block;width:.65rem;height:.65rem;border-radius:3px;
+margin-right:.35rem;vertical-align:baseline}
+
+/* Usage */
+h3.k{font-size:.85rem;font-weight:650;margin:1.4rem 0 .5rem;
+display:flex;align-items:baseline;gap:.5rem}
+h3.k .note{margin:0;font-size:.72rem}
+td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:nth-child(2),th:nth-child(4){text-align:right}
+/* Inline sparkline: a shape reads faster than a column of integers, and shows
+   distribution — that one entity is 5x the next — which numbers state but do
+   not show. Scaled per kind, so a skill is not a stub beside a 543-call tool. */
+td.spark{width:7rem;min-width:5rem;padding-top:.72rem}
+td.spark i{display:block;height:.42rem;border-radius:2px;
+background:linear-gradient(90deg,var(--accent),var(--blue))}
+
+.note{color:var(--dim);font-size:.78rem;margin:.6rem 0 0;line-height:1.55}
 .empty{color:var(--dim);font-style:italic}
-button{font:inherit;color:var(--blue);background:none;border:none;cursor:pointer;padding:0}
-button:hover{text-decoration:underline}
-@media print{body{padding:0}th{cursor:auto}button{display:none}
+button{font:inherit;font-size:.78rem;color:var(--blue);background:none;
+border:1px solid transparent;border-radius:4px;cursor:pointer;padding:.05rem .3rem}
+button:hover{background:var(--card);border-color:var(--line)}
+button:focus-visible,thead th:focus-visible{outline:2px solid var(--accent);
+outline-offset:1px}
+
+@media print{body{padding:0;font-size:11px}
+.wrap{border:none;box-shadow:none;overflow:visible}
+thead th{position:static;cursor:auto}
+.totals li{box-shadow:none}
+button{display:none}
 h2{break-after:avoid}tr{break-inside:avoid}}
 `.trim();
 
@@ -392,6 +465,109 @@ function summaryPayload(input: ReportInput): unknown {
   };
 }
 
+/** How many rows per usage kind. Bounded so the 📏 120KB budget holds. */
+const USAGE_ROWS = 12;
+
+/**
+ * What is actually invoked, split by kind.
+ *
+ * **One table per kind, not one global ranking.** MCP tool calls outnumber
+ * everything else by an order of magnitude — one browser session emits
+ * hundreds — so a single top-N list contains no skills at all, however heavily
+ * used. They are also not comparable quantities: an MCP call is a step inside a
+ * turn, a skill invocation is a deliberate act.
+ *
+ * An unreadable transcript renders as **unavailable with its reason**, never as
+ * an empty list: "you never used these" is the opposite advice from "we could
+ * not tell", and the first one gets acted on by deleting things.
+ */
+function usageSection(usage: UsageResult | undefined): string {
+  if (usage === undefined) return '<p class="empty">Usage was not collected.</p>';
+  if (!usage.available) {
+    return `<p class="warning">Usage unavailable</p><p class="note">${esc(usage.reason ?? 'unknown reason')}
+      — no prune list is shown, because an unread transcript is not an unused stack.</p>`;
+  }
+
+  const KINDS: Array<[string, string]> = [
+    ['skill', 'Skills'],
+    ['command', 'Commands'],
+    ['agent', 'Agents'],
+    ['mcp', 'MCP tools'],
+  ];
+
+  const blocks = KINDS.map(([kind, title]) => {
+    const records = usage.records.filter((r) => r.kind === kind);
+    if (records.length === 0) {
+      return `<h3 class="k">${esc(title)}</h3><p class="empty">none invoked</p>`;
+    }
+
+    const top = records.slice(0, USAGE_ROWS);
+    const peak = Math.max(...top.map((r) => r.invocations));
+    const more =
+      records.length > top.length
+        ? `<span class="note">top ${top.length} of ${records.length}</span>`
+        : '';
+
+    const rows = top
+      .map(
+        (r) => `<tr><td>${esc(r.entity)}${
+          r.owner === undefined ? '' : ` <span class="info">${esc(r.owner)}</span>`
+        }</td>
+        <td class="num">${r.invocations}</td>
+        <td class="spark"><i style="width:${Math.max(2, Math.round((r.invocations / peak) * 100))}%"></i></td>
+        <td class="num">${r.sessions ?? ''}</td>
+        <td><code>${esc((r.lastUsed ?? '').slice(0, 10))}</code></td></tr>`,
+      )
+      .join('');
+
+    return `<h3 class="k">${esc(title)} ${more}</h3>
+      <table><thead><tr><th>entity</th><th>invocations</th><th></th>
+      <th>sessions</th><th>last used</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }).join('');
+
+  const unused =
+    usage.unused.length === 0
+      ? '<p class="ok">Everything installed has been used at least once.</p>'
+      : `<h3 class="k">Never invoked <span class="note">${usage.unused.length} total${
+          usage.unused.length > USAGE_ROWS ? `, ${USAGE_ROWS} shown` : ''
+        }</span></h3>
+        <table><thead><tr><th>kind</th><th>entity</th><th>always-on cost</th></tr></thead><tbody>${usage.unused
+          // Measured first: an unmeasured entity has no established cost, and
+          // putting it at the top of a prune list implies one.
+          .slice()
+          .sort((a, b) => (b.passiveCost ?? -1) - (a.passiveCost ?? -1))
+          .slice(0, USAGE_ROWS)
+          .map(
+            (u) => `<tr><td>${esc(u.kind)}</td><td>${esc(u.entity)}</td><td class="num">${
+              u.passiveCost === undefined
+                ? '<span class="info">unmeasured</span>'
+                : `~${u.passiveCost} tok`
+            }</td></tr>`,
+          )
+          .join('')}</tbody></table>`;
+
+  return `<p class="note">${usage.totalInvocations} invocations across ${
+    usage.scanned.accepted
+  } transcript(s).</p>${blocks}${unused}<p class="note">${esc(usage.methodology)}</p>`;
+}
+
+/**
+ * Puts every table in a horizontally scrollable container.
+ *
+ * A six-column plugin table does not fit a phone, and this report is made to be
+ * sent to people — an unwrapped table makes the whole *page* scroll sideways,
+ * which is the failure mode where the body text becomes unreadable rather than
+ * just the table.
+ *
+ * Applied centrally rather than at each call site so a new table cannot forget
+ * it. Operating on the assembled HTML is safe here because every value that
+ * comes from data goes through `esc()` first, so a literal `<table>` can only
+ * ever have originated from one of this module's own templates.
+ */
+function wrapTables(html: string): string {
+  return html.replace(/<table>/gu, '<div class="wrap"><table>').replace(/<\/table>/gu, '</table></div>');
+}
+
 /**
  * Builds the whole document.
  *
@@ -403,7 +579,7 @@ export function renderReport(input: ReportInput): string {
   const { inventory } = input;
   const payload = summaryPayload(input);
 
-  return `<!doctype html>
+  return wrapTables(`<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ccatlas — ${esc(input.scope)}</title>
@@ -423,6 +599,9 @@ ${budgetChart(inventory)}
 <h2>Version health</h2>
 ${updatesSection(input.updates)}
 
+<h2>Usage</h2>
+${usageSection(input.usage)}
+
 <h2>Findings</h2>
 ${findingsTable(input.doctor)}
 
@@ -437,5 +616,5 @@ contains no telemetry and made no network calls to produce.</p>
 </main>
 <script type="application/json" id="ccatlas-data">${inlineJson(payload)}</script>
 <script>${JS}</script>
-</body></html>`;
+</body></html>`);
 }

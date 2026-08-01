@@ -416,3 +416,84 @@ test('the inlined payload is a summary, and says so', () => {
   // …and the document tells the reader where the full data lives.
   assert.match(html, /complete inventory/);
 });
+
+// ---------------------------------------------------------------------------
+// Usage section
+// ---------------------------------------------------------------------------
+
+const usageResult = (over = {}) => ({
+  available: true,
+  totalInvocations: 12,
+  scanned: { accepted: 3, rejected: 0 },
+  records: [
+    { kind: 'skill', entity: 'superpowers:brainstorming', invocations: 11, sessions: 9, lastUsed: '2026-07-31T08:28:14.283Z' },
+    { kind: 'mcp', entity: 'chrome/computer', invocations: 543, sessions: 20, lastUsed: '2026-07-31T08:28:14.283Z' },
+  ],
+  unused: [],
+  methodology: 'counts are exact; costs are estimates',
+  ...over,
+});
+
+test('skills appear in the report even when an MCP tool outnumbers them 50x', () => {
+  const html = renderReport(input({ usage: usageResult() }));
+
+  // The reason the section is split by kind at all: a single global ranking
+  // is all MCP calls, and the skill a user actually wants to see is nowhere.
+  assert.match(html, /superpowers:brainstorming/);
+  assert.match(html, /Skills/);
+  assert.match(html, /MCP tools/);
+});
+
+test('UNAVAILABLE usage is not rendered as an empty prune list', () => {
+  const html = renderReport(
+    input({ usage: { available: false, reason: 'unrecognised transcript shape' } }),
+  );
+
+  // "You never used these" and "we could not tell" are opposite advice, and
+  // the first is acted on by deleting things.
+  assert.match(html, /Usage unavailable/);
+  assert.match(html, /unrecognised transcript shape/);
+  assert.ok(!/Never invoked/.test(html), 'a prune list must not appear when usage could not be read');
+});
+
+test('usage that ran and found everything used says so, distinctly', () => {
+  const html = renderReport(input({ usage: usageResult({ unused: [] }) }));
+  assert.match(html, /used at least once/);
+  assert.ok(!/Usage unavailable/.test(html));
+});
+
+test('the never-invoked list puts MEASURED costs first', () => {
+  const html = renderReport(
+    input({
+      usage: usageResult({
+        unused: [
+          { kind: 'skill', entity: 'unmeasured-one' },
+          { kind: 'skill', entity: 'costly-one', passiveCost: 400 },
+        ],
+      }),
+    }),
+  );
+
+  // An unmeasured entity has no established cost; ranking it above a measured
+  // one implies it has the larger cost, which is precisely backwards.
+  assert.ok(
+    html.indexOf('costly-one') < html.indexOf('unmeasured-one'),
+    'measured costs must sort above unmeasured ones',
+  );
+  assert.match(html, /unmeasured/);
+});
+
+test('a missing usage service degrades only its own section', () => {
+  const html = renderReport(input({ usage: undefined, inventory: inventory({ plugins: [plugin()] }) }));
+  assert.match(html, /Usage was not collected/);
+  // The rest of the document still renders.
+  assert.match(html, /p@mkt/);
+});
+
+test('every table is wrapped so a phone scrolls the TABLE, not the page', () => {
+  const html = renderReport(input({ usage: usageResult(), inventory: inventory({ plugins: [plugin()] }) }));
+  const tables = (html.match(/<table>/gu) ?? []).length;
+  const wraps = (html.match(/<div class="wrap"><table>/gu) ?? []).length;
+  assert.ok(tables > 0, 'no tables rendered');
+  assert.equal(wraps, tables, 'every table must be wrapped');
+});

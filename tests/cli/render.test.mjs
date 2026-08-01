@@ -62,29 +62,34 @@ const plugin = (over = {}) => ({
 
 test('a genuinely empty section renders as a zero', () => {
   const text = renderTree(result(emptyInventory()), PLAIN);
-  assert.match(text, /Plugins: 0/);
+  assert.match(text, /Plugins\s+0\s+ok/);
 });
 
 test('a DEGRADED section renders as unavailable, never as a zero', () => {
   const text = renderTree(result(emptyInventory({ degraded: ['cli'] })), PLAIN);
 
-  // "Plugins: 0" here would be the tool confidently reporting that nothing is
-  // installed on a machine whose plugin collector just died — the exact
-  // failure isolate.ts exists to prevent, thrown away at the last step.
-  assert.ok(!/Plugins: 0/.test(text), 'a broken section must not read as an empty one');
-  assert.match(text, /Plugins: unavailable \(cli failed\)/);
+  // A `Plugins 0 ok` row here would be the tool confidently reporting that
+  // nothing is installed on a machine whose plugin collector just died — the
+  // exact failure isolate.ts exists to prevent, thrown away at the last step.
+  assert.ok(!/Plugins\s+0\s+ok/.test(text), 'a broken section must not read as an empty one');
+  assert.match(text, /Plugins\s+—\s+unavailable — cli failed/);
 });
 
 test('the degraded marker names which collector failed', () => {
   const text = renderTree(result(emptyInventory({ degraded: ['skills'] })), PLAIN);
-  assert.match(text, /Skills: unavailable \(skills failed\)/);
+  assert.match(text, /Skills\s+—\s+unavailable — skills failed/);
   // Sections fed by a healthy collector still report their real count.
-  assert.match(text, /Plugins: 0/);
+  assert.match(text, /Plugins\s+0\s+ok/);
 });
 
 test('a partial section is marked incomplete, distinct from both', () => {
   const text = renderTree(result(emptyInventory({ partial: ['cli'] })), PLAIN);
-  assert.match(text, /Plugins: 0 \(incomplete\)/);
+
+  // Three distinct renderings for three distinct facts: `0 ok`, `0 incomplete`
+  // and `— unavailable`. Collapsing any pair loses a distinction the whole
+  // stack spends effort preserving.
+  assert.match(text, /Plugins\s+0\s+incomplete — cli/);
+  assert.ok(!/Plugins\s+0\s+ok/.test(text));
 });
 
 test('the flat renderer announces degraded sections too', () => {
@@ -220,9 +225,16 @@ test('--verbose renders per-section detail AND timings, as the help promises', (
 
   assert.ok(!/Collectors/.test(quiet), 'per-section detail is verbose-only');
   assert.match(loud, /Collectors/);
+
   // Slowest first, so a section dominating the T1.11 budget is attributable
-  // rather than merely felt.
-  assert.ok(loud.indexOf('skills') < loud.indexOf('cli'), 'sections must sort slowest first');
+  // rather than merely felt. Scoped to the Collectors block: the summary table
+  // above it now names collectors too (`incomplete — cli`), so an indexOf over
+  // the whole document measures the wrong thing.
+  const collectors = loud.slice(loud.indexOf('Collectors'));
+  assert.ok(
+    collectors.indexOf('skills') < collectors.indexOf('cli'),
+    'sections must sort slowest first',
+  );
   assert.match(loud, /registry\s+failed\s+3ms — boom/);
   assert.match(loud, /total.*wall clock/);
 });
@@ -256,16 +268,18 @@ test('a degraded cli still shows the rows the registry layer knows', () => {
 
   // A machine whose `cli` collector died still has everything
   // installed_plugins.json knows. Suppressing the list would discard data we
-  // hold; the header is what stops the count being read as complete.
-  assert.match(text, /Plugins: unavailable \(cli failed, 1 known from the other source\)/);
+  // hold; the status column is what stops the count being read as complete.
+  assert.match(text, /Plugins\s+1\s+unavailable — cli failed/);
   assert.match(text, /─ p 1\.0\.0/, 'the file-only rows must still be listed');
   assert.match(text, /file-only/, 'and be marked as half-evidenced');
 });
 
 test('a degraded section with genuinely nothing says only that', () => {
   const text = renderTree(result(emptyInventory({ degraded: ['cli'] })), PLAIN);
-  assert.match(text, /Plugins: unavailable \(cli failed\)/);
-  assert.ok(!/known from/.test(text), 'no count to report when there are no rows');
+
+  // An em dash, not a 0: there is no count to report, and printing one would
+  // assert a fact the failed collector never established.
+  assert.match(text, /Plugins\s+—\s+unavailable — cli failed/);
 });
 
 // ---------------------------------------------------------------------------

@@ -13,6 +13,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { allProjectsGate, projectSlug, renderIndex, writeProjectReport } from './all-projects.ts';
+import { usage } from './analytics-run.ts';
 import { doctor } from './doctor-run.ts';
 import { collectProjects, readTranscriptDirNames, transcriptsRoot } from './projects.ts';
 import { redactString, redactValue, renderReport } from './report.ts';
@@ -68,12 +69,13 @@ export async function report(options: ReportOptions = {}): Promise<ReportResult>
   const redact = options.redact ?? false;
   const hostname = redact ? os.hostname() : '';
 
-  // All three services, concurrently. Each already isolates its own failures,
+  // All four services, concurrently. Each already isolates its own failures,
   // so a broken section degrades one part of the document rather than the run.
-  const [statusResult, doctorResult, updatesResult] = await Promise.all([
+  const [statusResult, doctorResult, updatesResult, usageResult] = await Promise.all([
     status(options),
     doctor({ ...options, projectDir: options.projectDir ?? process.cwd() }),
     updates(options),
+    usage(options),
   ]);
 
   const scope =
@@ -88,6 +90,7 @@ export async function report(options: ReportOptions = {}): Promise<ReportResult>
     inventory: redact ? redactValue(statusResult.inventory, hostname) : statusResult.inventory,
     doctor: redact ? redactValue(doctorResult.report, hostname) : doctorResult.report,
     updates: redact ? redactValue(updatesResult.report, hostname) : updatesResult.report,
+    usage: redact ? redactValue(usageResult.report, hostname) : usageResult.report,
     generatedAt: new Date().toISOString(),
     toolVersion: options.toolVersion ?? 'unknown',
     redact,
