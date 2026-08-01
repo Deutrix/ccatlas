@@ -1,6 +1,6 @@
 {
   "name": "ccatlas",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Inventory, freshness, usage ROI and portability for your Claude Code stack. Finds stale pins that `/plugin update` reports as up to date.",
   "author": {
     "name": "Deutrix"
