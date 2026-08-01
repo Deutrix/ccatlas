@@ -29,3 +29,6 @@ reports/
 # Internal design documents. Kept on disk, not published — the repo ships the
 # product, not the planning. See the README for what they were.
 docs/
+
+# Release runbook. Internal process, not part of the shipped product.
+PUBLISHING.md

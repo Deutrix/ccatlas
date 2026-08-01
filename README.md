@@ -1,11 +1,16 @@
 # ccatlas
 
-Inventory, freshness, usage ROI, and portability for your Claude Code stack.
+Inventory, freshness, usage, and portability for your Claude Code stack.
 
-`ccusage` is the accountant for your tokens. ccatlas is the package-manager
-dashboard: **what you have** (marketplaces, plugins, skills, agents, commands,
-hooks, MCP/LSP servers), **whether it's current**, **whether it earns its
-context**, and **how to move it** to another machine.
+ccatlas is a package-manager dashboard for your **extensions** — marketplaces,
+plugins, skills, agents, commands, hooks, MCP/LSP servers. It answers **what you
+have**, **whether it's current**, **what you actually use**, and **how to move
+it** to another machine.
+
+It tracks *add-on usage*, not spending. The only cost it reports is **context**:
+roughly how many tokens an extension occupies in every turn whether you use it
+or not. There is no billing data here, and nothing is sent anywhere — for what
+your sessions cost in money, use `ccusage`.
 
 ## Why
 
@@ -157,8 +162,6 @@ Set `version` in **`plugin.json` and `package.json`, never in the marketplace
 entry** — `tests/manifest-consistency.test.mjs` enforces both halves, because
 the repo shipped a 0.0.0/0.5.0 mismatch that made `--version` misreport itself.
 `npm run sync-version` copies the version across in a one-line edit.
-
-Releasing is documented step by step in [`PUBLISHING.md`](./PUBLISHING.md).
 
 ### A note on the transcript adapter
 

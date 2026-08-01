@@ -16,7 +16,7 @@ Not published to npm. See the README's *Status* table for what remains and why.
 
 ## What ccatlas is
 
-A local-first CLI + Claude Code plugin that inventories, audits, and makes portable a user's Claude Code extension stack (marketplaces, plugins, skills, agents, commands, hooks, MCP/LSP servers). Positioning: `ccusage` is the accountant for tokens; ccatlas is the package-manager dashboard — what you have, whether it's current, whether it earns its context, and how to move it.
+A local-first CLI + Claude Code plugin that inventories, audits, and makes portable a user's Claude Code extension stack (marketplaces, plugins, skills, agents, commands, hooks, MCP/LSP servers). Positioning: a package-manager dashboard for **extensions** — what you have, whether it is current, what you actually use, and how to move it. It reports **context** cost (roughly how many tokens an extension occupies every turn), never money. There is no billing data anywhere in it, and no telemetry; `ccusage` is the tool for what sessions cost in money.
 
 Ships two ways from one artefact: npm package `ccatlas` (standalone) and plugin `ccatlas@deutrix` whose marketplace entry uses `source: npm`.
 

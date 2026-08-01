@@ -370,8 +370,8 @@ export function parseArgs(
 export function helpText(version: string): string {
   const flagHelp = GLOBAL_FLAGS.map(({ flag, help }) => `  ${flag.padEnd(12)} ${help}`).join('\n');
 
-  return `ccatlas ${version} — inventory, freshness, usage ROI, and portability
-for your Claude Code stack.
+  return `ccatlas ${version} — inventory, freshness, usage and portability
+for your Claude Code extensions.
 
 USAGE
   ccatlas <command> [flags]

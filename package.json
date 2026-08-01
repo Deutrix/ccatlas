@@ -1,7 +1,7 @@
 {
   "name": "ccatlas",
   "version": "0.5.1",
-  "description": "Inventory, freshness, usage ROI, and portability for your Claude Code stack",
+  "description": "Inventory, freshness, usage and portability for your Claude Code extensions",
   "license": "MIT",
   "author": "Deutrix",
   "type": "module",

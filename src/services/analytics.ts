@@ -1,5 +1,10 @@
 /**
- * Usage and ROI — T4.9–T4.12.
+ * Extension usage and context cost — T4.9–T4.12.
+ *
+ * **Cost here means context, never money.** The figure is roughly how many
+ * tokens an extension occupies in every turn whether or not it is used. This
+ * service reads transcripts and an estimator; it has no billing data, no
+ * pricing table, and no notion of spend.
  *
  * **The only service permitted to import the transcript adapter.** That
  * quarantine is the whole reason T4.1 is its own layer: if the undocumented
@@ -10,8 +15,9 @@
  *
  * An invocation count is a fact — it was in the transcript or it was not. A
  * token cost comes from Claude Code's own estimator, which **falls back
- * silently** across three regimes ~40% apart. So `roiRatio` is a ratio of a
- * fact to an estimate, and every surface that renders it has to say so.
+ * silently** across three regimes ~40% apart. So any ratio of invocations to
+ * cost is a fact divided by an estimate, and every surface that renders one
+ * has to say so.
  *
  * ## `--unused` is the headline, and it is where a wrong answer costs most
  *
@@ -68,7 +74,7 @@ export type UsageResult = UsageReport | { readonly available: false; readonly re
  *
  * T4.14 requires it, and the reason is that two very different kinds of number
  * sit side by side in this report. A reader who assumes both are measured will
- * over-trust the ROI column.
+ * over-trust the cost column.
  */
 export const METHODOLOGY =
   'Invocation counts are exact — they come from transcript records. Token costs are ' +
