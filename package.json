@@ -1,6 +1,6 @@
 {
   "name": "ccatlas",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Inventory, freshness, usage and portability for your Claude Code extensions",
   "license": "MIT",
   "author": "Deutrix",
