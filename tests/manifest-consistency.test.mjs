@@ -57,3 +57,25 @@ test('.claude-plugin contains ONLY plugin.json', async () => {
   // just never appear. Cheap to assert, expensive to debug.
   assert.deepEqual(entries, ['plugin.json']);
 });
+
+test('the marketplace description matches plugin.json — they are published apart', () => {
+  const entry = marketplace.plugins.find((p) => p.name === 'ccatlas');
+
+  // `marketplace/.claude-plugin/marketplace.json` is mirrored into the separate
+  // Deutrix/claude-plugins repository, which is what users actually add. Two
+  // copies of one manifest drift silently: the marketplace listing keeps
+  // describing an old version of the product while this repo says otherwise,
+  // and nothing errors. Pinning them to plugin.json makes the drift a test
+  // failure here rather than a stale listing nobody notices.
+  assert.equal(entry.description, plugin.description);
+});
+
+test('the marketplace names the npm package this repo publishes', () => {
+  const entry = marketplace.plugins.find((p) => p.name === 'ccatlas');
+
+  // The entry installs by npm package name. If `name` in package.json ever
+  // changes without this following, the marketplace installs someone else's
+  // package under our name — the worst possible failure of a trust boundary.
+  assert.equal(entry.source.source, 'npm');
+  assert.equal(entry.source.package, pkg.name);
+});
