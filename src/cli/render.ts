@@ -113,7 +113,14 @@ function header(result: StatusResult, options: RenderOptions): string[] {
       ? `cached ${result.cachedAt ?? ''}`.trim()
       : `collected in ${inventory.elapsedMs}ms`;
 
-  const lines = [`${c('ccatlas status', 'bold')} ${c(`— ${source}`, 'dim')}`];
+  // The scope is named, always. T1.24's whole subject is that global is one
+  // value of an axis — an axis the reader cannot see is one they will forget
+  // is there, and a project report that looks identical to a global one is
+  // worse than no project report.
+  const scope =
+    result.target.kind === 'project' ? `project ${result.target.path}` : 'global';
+
+  const lines = [`${c('ccatlas status', 'bold')} ${c(`— ${scope} · ${source}`, 'dim')}`];
   if (result.cacheMiss !== undefined) {
     lines.push(c(`  --cached not honoured: ${result.cacheMiss}`, 'yellow'));
   }

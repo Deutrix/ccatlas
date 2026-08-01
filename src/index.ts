@@ -90,7 +90,17 @@ export async function run(argv: readonly string[]): Promise<number> {
       // The envelope is the contract skills read. Serialised straight from the
       // service output — no renderer in between, so the tables can change
       // shape without the schema moving.
-      const payload = envelope(parsed.command, VERSION, result.inventory, result.warnings);
+      //
+      // `scope` travels **inside** `data`. Without it a scoped payload is
+      // byte-identical in shape to a global one and a skill has no way to
+      // tell what it is looking at — which defeats T1.24, whose entire
+      // subject is that global is one value of an axis.
+      const payload = envelope(
+        parsed.command,
+        VERSION,
+        { scope: result.target, ...result.inventory },
+        result.warnings,
+      );
       process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
       return EXIT_OK;
     }

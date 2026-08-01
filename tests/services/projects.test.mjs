@@ -10,12 +10,17 @@
  */
 
 import assert from 'node:assert/strict';
-import { mkdtempSync, mkdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
-import { collectProjects, findProject, readTranscriptDirNames } from '../../src/services/projects.ts';
+import {
+  collectProjects,
+  findProject,
+  readTranscriptDirNames,
+  resolveProject,
+} from '../../src/services/projects.ts';
 
 const keys = (...values) => ({ claudeJsonKeys: values });
 
@@ -221,4 +226,75 @@ test('only directories are enumerated, not stray files', async (t) => {
   writeFileSync(path.join(root, 'not-a-dir.jsonl'), '', 'utf8');
 
   assert.deepEqual(await readTranscriptDirNames(root), ['C--a-project']);
+});
+
+// ---------------------------------------------------------------------------
+// Link-aware lookup — what findProject was wrongly documented as doing
+// ---------------------------------------------------------------------------
+
+test('findProject does NOT resolve a junction, and no longer claims to', async (t) => {
+  const root = realpathSync.native(mkdtempSync(path.join(tmpdir(), 'ccatlas-proj-link-')));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const real = path.join(root, 'real-project');
+  mkdirSync(real, { recursive: true });
+  const link = path.join(root, 'via-junction');
+  try {
+    symlinkSync(real, link, 'junction');
+  } catch {
+    return t.skip('this environment refuses to create links');
+  }
+
+  const inventory = await collectProjects({ claudeJsonKeys: [real], probe: true });
+
+  // The sync form compares a string-normalised INPUT against a
+  // realpath-normalised KNOWN project — a comparison that only succeeds when
+  // the caller already typed the target's spelling, which the first lookup
+  // catches anyway.
+  assert.equal(findProject(inventory, link), undefined);
+
+  // The async form actually resolves.
+  assert.ok(await resolveProject(inventory, link), 'resolveProject missed the junction');
+});
+
+test('resolveProject takes the free string path first', async () => {
+  // Forward slashes on purpose: `normaliseProjectPath` folds them either way,
+  // and a backslash literal here is one escaping mistake away from asserting
+  // against `C:UsersmeApp`.
+  const inventory = await collectProjects(keys('C:/Users/me/App'));
+
+  // No probe ran, so no realKey exists — the string match must still answer,
+  // without paying for a realpath call.
+  assert.ok(await resolveProject(inventory, 'c:/users/me/app/'));
+});
+
+test('resolveProject returns undefined for a path that resolves to nothing known', async () => {
+  const inventory = await collectProjects(keys('C:/known'));
+  assert.equal(await resolveProject(inventory, path.join(tmpdir(), 'ccatlas-nope-xyz')), undefined);
+});
+
+// ---------------------------------------------------------------------------
+// The probe is concurrent, not serial
+// ---------------------------------------------------------------------------
+
+test('probing many projects does not serialise', async (t) => {
+  const root = mkdtempSync(path.join(tmpdir(), 'ccatlas-proj-perf-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+
+  const many = Array.from({ length: 200 }, (_, i) => path.join(root, `p${i}`));
+  for (const dir of many) mkdirSync(dir, { recursive: true });
+
+  const started = performance.now();
+  const inventory = await collectProjects({ claudeJsonKeys: many, probe: true });
+  const elapsed = performance.now() - started;
+
+  assert.equal(inventory.projects.length, 200);
+  for (const project of inventory.projects) assert.equal(project.existence, 'present');
+
+  // Not a perf gate — a shape assertion. 200 serial stats plus 200 serial
+  // realpaths on a loaded CI runner will not fit here; the concurrent form
+  // does so comfortably. The reference machine has 93 refs and this runs on
+  // every `doctor`.
+  t.diagnostic(`200 projects probed in ${elapsed.toFixed(0)}ms`);
+  assert.ok(elapsed < 3000, `probing 200 projects took ${elapsed.toFixed(0)}ms — is it serial?`);
 });

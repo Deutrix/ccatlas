@@ -481,7 +481,7 @@ test('the real fixture corpus contains no plaintext secrets', async () => {
 
 test('a project whose directory is GONE is a finding', () => {
   const findings = orphanedProjectFindings([
-    { displayPath: 'C:\Users\me\Desktop\deleted', existence: 'gone' },
+    { displayPath: 'C:/Users/me/Desktop/deleted', existence: 'gone' },
   ]);
 
   assert.equal(findings.length, 1);
@@ -495,20 +495,20 @@ test('an UNREACHABLE project is NOT a finding — the distinction that matters',
   // Telling someone their project is gone when the drive is merely unplugged
   // is how a diagnostic loses the user's trust in one line.
   assert.deepEqual(
-    orphanedProjectFindings([{ displayPath: 'Z:\on-a-detached-drive', existence: 'unreachable' }]),
+    orphanedProjectFindings([{ displayPath: 'Z:/on-a-detached-drive', existence: 'unreachable' }]),
     [],
   );
 });
 
 test('a present project is never reported — the negative case', () => {
   assert.deepEqual(
-    orphanedProjectFindings([{ displayPath: 'C:\real\project', existence: 'present' }]),
+    orphanedProjectFindings([{ displayPath: 'C:/real/project', existence: 'present' }]),
     [],
   );
 });
 
 test('an orphaned project offers NO fix command', () => {
-  const findings = orphanedProjectFindings([{ displayPath: 'C:\gone', existence: 'gone' }]);
+  const findings = orphanedProjectFindings([{ displayPath: 'C:/gone', existence: 'gone' }]);
 
   // Hand-editing ~/.claude.json is not something to recommend casually — it is
   // ~193KB of undocumented state that Claude Code rewrites — and no `claude`
@@ -530,7 +530,7 @@ test('a mixed set reports only the gone ones', () => {
 test('project records reach the composed report', () => {
   const report = buildDoctorReport({
     inventory: emptyInventory(),
-    projectRecords: [{ displayPath: 'C:\gone', existence: 'gone' }],
+    projectRecords: [{ displayPath: 'C:/gone', existence: 'gone' }],
   });
 
   assert.ok(report.findings.some((f) => f.code === 'orphaned-project'));

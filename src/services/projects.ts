@@ -39,7 +39,7 @@ import {
   groupProjectKeys,
   isCandidateProjectDir,
 } from '../util/project-path.ts';
-import { probeExistence, resolveProjectRefs } from '../util/project-resolve.ts';
+import { probeExistence, resolveProjectRefs, resolveRealKey } from '../util/project-resolve.ts';
 import type { Existence, ResolvedProjectRef } from '../util/project-resolve.ts';
 import type { ProjectRef, Warning } from '../types.ts';
 
@@ -117,28 +117,39 @@ export async function collectProjects(options: ProjectsOptions = {}): Promise<Pr
   warnings.push(...linkWarnings);
 
   const claimed = new Set<string>();
-  const projects: ProjectRecord[] = [];
 
-  for (const ref of refs) {
-    // Forward-encoded matching only. Every raw spelling is tried, because two
-    // keys that collided into one ref can encode to two different directory
-    // names — the encoding folds separators, and the raw keys differ in
-    // exactly those.
+  // Forward-encoded matching only. Every raw spelling is tried, because two
+  // keys that collided into one ref can encode to two different directory
+  // names — the encoding folds separators, and the raw keys differ in exactly
+  // those. Pure, so it runs in the loop; the IO does not.
+  const matches = refs.map((ref) => {
     const matched = dirNames.filter((dirName) =>
       ref.rawKeys.some((raw) => isCandidateProjectDir(raw, dirName)),
     );
     for (const dirName of matched) claimed.add(dirName);
+    return matched;
+  });
 
+  // Concurrent, and this is load-bearing rather than tidiness: 93 refs on the
+  // reference machine, and `await` inside the loop above would mean 93 serial
+  // `stat` calls on every `doctor` run — visible against T1.11's budget the
+  // moment one of those paths is on a network share.
+  const existences = options.probe === true
+    ? await Promise.all(refs.map((ref) => probeExistence(ref.displayPath)))
+    : refs.map((): Existence => 'unreachable');
+
+  const projects: ProjectRecord[] = refs.map((ref, index) => {
+    const matched = matches[index] as string[];
     const sources: ProjectSource[] = ['claude-json'];
     if (matched.length > 0) sources.push('transcripts');
 
-    projects.push({
+    return {
       ref,
       sources,
       transcriptDirs: matched,
-      existence: options.probe === true ? await probeExistence(ref.displayPath) : 'unreachable',
-    });
-  }
+      existence: existences[index] as Existence,
+    };
+  });
 
   const unresolved: UnresolvedTranscriptDir[] = dirNames
     .filter((dirName) => !claimed.has(dirName))
@@ -172,12 +183,19 @@ function asUnprobed(ref: ProjectRef): ResolvedProjectRef {
 // ---------------------------------------------------------------------------
 
 /**
- * Finds the record for an arbitrary path spelling — a `--project` argument, a
- * transcript `cwd`, a `~/.claude.json` key.
+ * Finds the record for a path spelling, **by string only**.
  *
- * Matches on the normalised string first and the resolved real path second, so
- * `--project` given through a junction still finds the project registered
- * under its target.
+ * Covers separators, case, trailing separators and UNC — everything
+ * `normaliseProjectPath` folds. It does **not** resolve junctions, symlinks,
+ * `subst` drives or 8.3 short names: those need `realpath`, which is IO, and
+ * this function does none. An earlier version of this comment claimed
+ * otherwise while comparing a *string-normalised input* against a
+ * *realpath-normalised known project* — a comparison that only ever succeeds
+ * when the caller already typed the target's spelling, which the first lookup
+ * catches anyway.
+ *
+ * Use `resolveProject` when the input may be a link. T3.12's `--project`
+ * should.
  */
 export function findProject(
   inventory: ProjectsInventory,
@@ -186,10 +204,32 @@ export function findProject(
   const { key } = groupProjectKeys([rawPath])[0] as ProjectRef;
   if (key === '') return undefined;
 
-  return (
-    inventory.projects.find((record) => record.ref.key === key) ??
-    inventory.projects.find((record) => record.ref.realKey === key)
-  );
+  return inventory.projects.find((record) => record.ref.key === key);
+}
+
+/**
+ * Finds the record for a path spelling, resolving links.
+ *
+ * The string match is tried first because it is free and answers for the
+ * overwhelming majority. Only on a miss is the input realpath'd and compared
+ * against the known projects' resolved identities — so `--project` given
+ * through a junction finds the project registered under its target, which is
+ * what the sync version was wrongly documented as doing.
+ *
+ * A project whose own `realKey` was never computed (`probe: false`) cannot be
+ * matched this way, and is not: guessing would defeat the point.
+ */
+export async function resolveProject(
+  inventory: ProjectsInventory,
+  rawPath: string,
+): Promise<ProjectRecord | undefined> {
+  const direct = findProject(inventory, rawPath);
+  if (direct !== undefined) return direct;
+
+  const realKey = await resolveRealKey(rawPath);
+  if (realKey === undefined) return undefined;
+
+  return inventory.projects.find((record) => record.ref.realKey === realKey);
 }
 
 /** Absolute path to the transcript root, given a home directory. */

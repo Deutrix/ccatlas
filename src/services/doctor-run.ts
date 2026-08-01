@@ -243,7 +243,7 @@ async function resolveExistingPaths(
  * exactly the machine someone is running  on.
  */
 async function collectKnownProjects(home: string): Promise<{
-  records: Array<{ displayPath: string; existence: 'present' | 'gone' | 'unreachable'; collides: boolean }>;
+  records: Array<{ displayPath: string; existence: 'present' | 'gone' | 'unreachable' }>;
   skipped: Array<{ check: string; reason: string }>;
 }> {
   const read = await readJson(path.join(home, '.claude.json'));
@@ -272,7 +272,6 @@ async function collectKnownProjects(home: string): Promise<{
     records: inventory.projects.map((record) => ({
       displayPath: record.ref.displayPath,
       existence: record.existence,
-      collides: record.ref.collides,
     })),
     skipped: [],
   };

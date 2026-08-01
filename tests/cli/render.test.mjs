@@ -37,6 +37,7 @@ const emptyInventory = (over = {}) => ({
 
 const result = (inventory, over = {}) => ({
   inventory,
+  target: { kind: 'global' },
   origin: 'collected',
   warnings: inventory.warnings,
   ...over,
@@ -378,4 +379,23 @@ test('the flat renderer emits every entity kind', () => {
   for (const prefix of ['skill\t', 'agent\t', 'command\t', 'mcp\t']) {
     assert.ok(text.includes(prefix), `flat output omits ${prefix.trim()}`);
   }
+});
+
+// ---------------------------------------------------------------------------
+// The scope axis must be visible
+// ---------------------------------------------------------------------------
+
+test('the header names the scope, always', () => {
+  const global = renderTree(result(emptyInventory()), PLAIN);
+  const scoped = renderTree(
+    result(emptyInventory(), { target: { kind: 'project', path: 'C:/repo' } }),
+    PLAIN,
+  );
+
+  // T1.24's whole subject is that global is one value of an axis. An axis the
+  // reader cannot see is one they forget is there, and a project report that
+  // looks identical to a global one is worse than no project report.
+  assert.match(global, /— global ·/);
+  assert.match(scoped, /— project C:\/repo ·/);
+  assert.notEqual(global.split('\n')[0], scoped.split('\n')[0]);
 });
