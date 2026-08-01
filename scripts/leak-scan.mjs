@@ -15,9 +15,10 @@
  *     guarantee a permanent red build. See fixtures/synthetic/SECRETS-README.md.
  *
  *  2. Prose that *documents* a redaction pattern is not a leak. A findings
- *     file saying "scanned for alex/WORKSTN/token prefixes" is evidence the
- *     work was done. Only ALLOWLISTED files get this latitude, and only for
- *     identifier patterns — never for anything credential-shaped.
+ *     file saying "scanned for the local username, hostname and token
+ *     prefixes" is evidence the work was done. Only ALLOWLISTED files get this
+ *     latitude, and only for identifier patterns — never for anything
+ *     credential-shaped.
  *
  * Usage:  node scripts/leak-scan.mjs
  * Exit:   0 clean · 1 leak found
