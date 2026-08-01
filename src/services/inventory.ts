@@ -476,6 +476,71 @@ export function mergeMarketplaces(
 }
 
 // ---------------------------------------------------------------------------
+// MCP — two disjoint sources, unioned
+// ---------------------------------------------------------------------------
+
+/**
+ * Unions the two places MCP servers come from. **A union, not a preference.**
+ *
+ * This was `payload(inputs.mcp) ?? cli?.mcpServers ?? []` — a `??` where a
+ * merge belonged, which silently discarded every plugin-bundled server the
+ * moment the `mcp` collector succeeded. Measured on the reference machine: 7
+ * servers dropped, leaving 3 of 10. The two sources are near-disjoint by
+ * construction and are keyed differently, so neither can stand in for the
+ * other:
+ *
+ * - `cli` — plugin-bundled servers from `plugin list --json`'s per-plugin
+ *   `mcpServers` object, keyed `plugin:<plugin>:<server>`.
+ * - `mcp` — user scope from `~/.claude.json` and project scope from
+ *   `.mcp.json`, keyed by the bare server name.
+ *
+ * Where a name IS in both, the config side wins on `command`/`args`/`env`,
+ * matching the same decision the `cli` collector already makes internally:
+ * `mcp get` refuses to describe a plugin stdio server at all, so the config
+ * record is the richer one.
+ */
+export function mergeMcpSources(
+  fromCli: readonly McpServerEntity[],
+  fromMcp: readonly McpServerEntity[],
+): { servers: McpServerEntity[]; warnings: Warning[] } {
+  const merged = new Map<string, McpServerEntity>();
+  const warnings: Warning[] = [];
+
+  for (const server of fromCli) merged.set(keyOf(server.id.name, server.id.scope), server);
+
+  for (const server of fromMcp) {
+    const key = keyOf(server.id.name, server.id.scope);
+    const known = merged.get(key);
+    if (known === undefined) {
+      merged.set(key, server);
+      continue;
+    }
+
+    if (known.connection !== server.connection && known.connection !== 'unknown') {
+      warnings.push(
+        warn(
+          'reconciliation',
+          `connection state is "${known.connection}" per the CLI and "${server.connection}" ` +
+            'per the config files; both are recorded',
+          server.id.name,
+        ),
+      );
+    }
+
+    merged.set(key, {
+      ...known,
+      ...server,
+      ...(known.command !== undefined ? { command: known.command } : {}),
+      ...(known.args !== undefined ? { args: known.args } : {}),
+      ...(known.env !== undefined ? { env: known.env } : {}),
+      ...(known.owningPlugin !== undefined ? { owningPlugin: known.owningPlugin } : {}),
+    });
+  }
+
+  return { servers: [...merged.values()], warnings };
+}
+
+// ---------------------------------------------------------------------------
 // T1.7 — shadowing
 // ---------------------------------------------------------------------------
 
@@ -683,10 +748,14 @@ export function buildInventory(inputs: InventoryInputs): Inventory {
   const byKind = (kind: EntityId['kind']): Entity[] =>
     shadowing.annotated.filter((entity) => entity.id.kind === kind);
 
+  const mcp = mergeMcpSources(cli?.mcpServers ?? [], payload(inputs.mcp) ?? []);
+  warnings.push(...mcp.warnings);
+  const mergedMcp = mcp.servers;
+
   return {
     plugins,
     marketplaces: markets.marketplaces,
-    mcpServers: payload(inputs.mcp) ?? cli?.mcpServers ?? [],
+    mcpServers: mergedMcp,
     skills: byKind('skill'),
     agents: byKind('agent'),
     commands: byKind('command'),

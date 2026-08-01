@@ -55,6 +55,23 @@ export interface CacheEntry<T> {
   readonly writtenAt: string;
   /** ccatlas version that wrote it. A different build may compute differently. */
   readonly toolVersion: string;
+  /**
+   * The files this answer was derived from, **recorded by the run that
+   * produced it** rather than supplied by the reader.
+   *
+   * A caller that had to hand the reader a path list would be maintaining that
+   * list separately from the collectors that actually do the reading, and the
+   * two would drift the moment a collector learned to read something new —
+   * producing a cache that validates against a stale set of inputs and serves
+   * stale answers silently, which is the exact failure `fingerprintInputs`
+   * exists to prevent. Recording it here makes the list self-healing: a new
+   * input is picked up on the next cold write.
+   *
+   * The list includes files that were **absent** at write time. That is not an
+   * oversight — creating a project `settings.json` that did not exist must
+   * invalidate, and it only can if the absence was fingerprinted.
+   */
+  readonly inputs: string[];
   readonly fingerprint: string;
   readonly value: T;
 }
@@ -170,16 +187,19 @@ async function clearDirty(stateDir: string): Promise<void> {
 // ---------------------------------------------------------------------------
 
 /**
- * Reads an entry, validating it against the current formats and the caller's
- * fingerprint. Never throws.
+ * Reads an entry and validates it. Never throws.
  *
- * The order of checks is the cost order: the dirty flag is one stat, the file
- * read is one read, and the fingerprint is N stats — so the expensive check
- * runs last and only when the cheap ones passed.
+ * **The caller supplies no fingerprint.** The entry names the files it was
+ * derived from, and this re-fingerprints those — so a reader cannot validate
+ * against a path list that has drifted from what the collectors read. The
+ * check is self-healing rather than merely enforced.
+ *
+ * The order of checks is the cost order: the dirty flag is one stat, the entry
+ * is one read, and the fingerprint is N stats — so the expensive check runs
+ * last and only when the cheap ones passed.
  */
 export async function readCache<T>(
   name: string,
-  expectedFingerprint: string,
   options: CacheOptions = {},
 ): Promise<CacheRead<T>> {
   const stateDir = resolveStateDir(options.stateDir);
@@ -216,12 +236,20 @@ export async function readCache<T>(
   if (
     entry.cacheFormatVersion !== CACHE_FORMAT_VERSION ||
     entry.schemaVersion !== SCHEMA_VERSION ||
-    typeof entry.writtenAt !== 'string'
+    typeof entry.writtenAt !== 'string' ||
+    !Array.isArray(entry.inputs) ||
+    typeof entry.fingerprint !== 'string'
   ) {
     return { hit: false, reason: 'format-changed' };
   }
 
-  if (entry.fingerprint !== expectedFingerprint) return { hit: false, reason: 'stale-inputs' };
+  // An entry recording NO inputs could never be invalidated by an edit, so it
+  // is treated as unusable rather than as trivially fresh. A caller that
+  // genuinely has no file inputs has nothing to cache.
+  if (entry.inputs.length === 0) return { hit: false, reason: 'stale-inputs' };
+
+  const current = await fingerprintInputs(entry.inputs);
+  if (entry.fingerprint !== current) return { hit: false, reason: 'stale-inputs' };
 
   return {
     hit: true,
@@ -238,17 +266,21 @@ export async function readCache<T>(
  */
 export async function writeCache<T>(
   name: string,
-  fingerprint: string,
+  inputs: readonly string[],
   value: T,
   options: CacheOptions = {},
 ): Promise<Warning[]> {
   const stateDir = resolveStateDir(options.stateDir);
+  const recorded = [...inputs];
   const entry: CacheEntry<T> = {
     cacheFormatVersion: CACHE_FORMAT_VERSION,
     schemaVersion: SCHEMA_VERSION,
     writtenAt: new Date().toISOString(),
     toolVersion: options.toolVersion ?? 'unknown',
-    fingerprint,
+    inputs: recorded,
+    // Computed here, from the same list that is stored, so the two cannot
+    // disagree. A caller passing a fingerprint alongside a path list could.
+    fingerprint: await fingerprintInputs(recorded),
     value,
   };
 

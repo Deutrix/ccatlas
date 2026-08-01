@@ -32,15 +32,15 @@ test('--version prints the version baked in at build time', () => {
   assert.equal(stdout.trim(), pkg.version);
 });
 
-test('--json emits the one versioned envelope from types.ts', () => {
-  const { status, stdout } = runCli('--json');
+test('status --json emits the one versioned envelope from types.ts', () => {
+  const { status, stdout } = runCli('status', '--json', '--cached');
   assert.equal(status, 0);
 
   const payload = JSON.parse(stdout);
   assert.equal(payload.schemaVersion, 1);
   assert.equal(payload.tool, 'ccatlas');
   assert.equal(payload.version, pkg.version);
-  assert.equal(payload.command, 'root');
+  assert.equal(payload.command, 'status');
   assert.doesNotThrow(() => new Date(payload.generatedAt).toISOString());
   assert.ok('data' in payload, 'envelope must carry a data slot even when empty');
 
@@ -65,13 +65,64 @@ test('--json emits the one versioned envelope from types.ts', () => {
 test('--help prints usage and exits 0', () => {
   const { status, stdout } = runCli('--help');
   assert.equal(status, 0);
-  assert.match(stdout, /ccatlas --json/);
+  assert.match(stdout, /USAGE/);
+  assert.match(stdout, /--cached/);
 });
 
-test('unrecognised arguments exit 2 and write to stderr', () => {
-  const { status, stderr } = runCli('--not-a-real-flag');
+test('a bare invocation prints help rather than doing something surprising', () => {
+  const { status, stdout } = runCli();
+  assert.equal(status, 0);
+  assert.match(stdout, /USAGE/);
+});
+
+test('unrecognised flags exit 2, name every problem, and suggest', () => {
+  const { status, stderr } = runCli('status', '--not-a-real-flag', '--jso');
   assert.equal(status, 2);
-  assert.match(stderr, /unrecognised arguments/);
+
+  // Both problems in one run: a user who mistyped twice should not have to
+  // rediscover the second one after fixing the first.
+  assert.match(stderr, /--not-a-real-flag/);
+  assert.match(stderr, /--jso/);
+  assert.match(stderr, /Did you mean --json/);
+});
+
+test('an unknown command exits 2 and lists the known ones', () => {
+  const { status, stderr } = runCli('stauts');
+  assert.equal(status, 2);
+  assert.match(stderr, /unknown command "stauts"/);
+  assert.match(stderr, /status/);
+});
+
+test('a run that FINDS problems still exits 0', () => {
+  // Degraded sections, reconciliation conflicts and shadowed skills are
+  // ccatlas working, not ccatlas failing. Nonzero is reserved for T2.10's
+  // `updates --check`; establishing "nonzero means findings" here would
+  // collide with it, and reclaiming the code later would break scripts.
+  const { status, stdout } = runCli('status', '--cached', '--no-color');
+  assert.equal(status, 0);
+  assert.match(stdout, /ccatlas status/);
+});
+
+test('status renders a tree by default and a flat list on request', () => {
+  const tree = runCli('status', '--cached', '--no-color');
+  const flat = runCli('status', '--cached', '--flat', '--no-color');
+
+  assert.equal(tree.status, 0);
+  assert.equal(flat.status, 0);
+  assert.match(tree.stdout, /[├└]─/u, 'the default renderer draws a tree');
+  assert.ok(!/[├└]─/u.test(flat.stdout), 'the flat renderer draws no tree');
+});
+
+test('--no-color emits no ANSI escapes anywhere', () => {
+  const { stdout } = runCli('status', '--cached', '--no-color');
+  // eslint-disable-next-line no-control-regex
+  assert.ok(!/\[/.test(stdout), 'piping status into a file must not embed escape codes');
+});
+
+test('--json and --flat together is a usage error, not a silent precedence', () => {
+  const { status, stderr } = runCli('status', '--json', '--flat');
+  assert.equal(status, 2);
+  assert.match(stderr, /--flat/);
 });
 
 test('the shipped artifact bundles no runtime dependencies', () => {

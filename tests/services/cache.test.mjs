@@ -94,18 +94,33 @@ test('an empty CLAUDE_PLUGIN_DATA is treated as unset, not as the cwd', () => {
 
 test('a written entry reads back identically', async (t) => {
   const stateDir = tempState(t);
+  const input = writeInput(stateDir, 'settings.json', '{}');
   const value = { plugins: [{ id: 'p@mkt', version: '1.0.0' }] };
 
-  assert.deepEqual(await writeCache('inventory', 'fp-1', value, { stateDir }), []);
-  const read = await readCache('inventory', 'fp-1', { stateDir });
+  assert.deepEqual(await writeCache('inventory', [input], value, { stateDir }), []);
+  const read = await readCache('inventory', { stateDir });
 
   assert.equal(read.hit, true);
   assert.deepEqual(read.value, value);
   assert.doesNotThrow(() => new Date(read.writtenAt).toISOString());
 });
 
+test('the reader supplies no fingerprint — the ENTRY names its own inputs', async (t) => {
+  const stateDir = tempState(t);
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
+
+  // A reader that had to pass a path list would be maintaining it separately
+  // from the collectors that do the reading, and the two would drift the
+  // moment a collector learned to read something new — validating against a
+  // stale set and serving stale answers. So the list is recorded, not passed.
+  const entry = JSON.parse(readFileSync(path.join(cacheDir(stateDir), 'inventory.json'), 'utf8'));
+  assert.deepEqual(entry.inputs, [input]);
+  assert.equal(typeof entry.fingerprint, 'string');
+});
+
 test('an absent entry is a miss with a reason, never a throw', async (t) => {
-  const read = await readCache('nothing-here', 'fp', { stateDir: tempState(t) });
+  const read = await readCache('nothing-here', { stateDir: tempState(t) });
   assert.deepEqual(read, { hit: false, reason: 'absent' });
 });
 
@@ -115,46 +130,77 @@ test('an absent entry is a miss with a reason, never a throw', async (t) => {
 
 test('the dirty flag invalidates without reading the entry', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   await markDirty(stateDir);
   assert.equal(await isDirty(stateDir), true);
 
-  const read = await readCache('inventory', 'fp-1', { stateDir });
+  const read = await readCache('inventory', { stateDir });
   assert.deepEqual(read, { hit: false, reason: 'dirty' });
 });
 
 test('a write clears the dirty flag', async (t) => {
   const stateDir = tempState(t);
+  const input = writeInput(stateDir, 'settings.json', '{}');
   await markDirty(stateDir);
 
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   assert.equal(await isDirty(stateDir), false);
-  assert.equal((await readCache('inventory', 'fp-1', { stateDir })).hit, true);
+  assert.equal((await readCache('inventory', { stateDir })).hit, true);
 });
 
-test('a changed fingerprint invalidates even when the flag was never set', async (t) => {
+test('editing a recorded input invalidates, with no flag involved', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
+  assert.equal((await readCache('inventory', { stateDir })).hit, true);
 
   // The hook only fires while Claude Code is running. An edit from an editor,
   // a script, or `sync pull` sets no flag at all — so the fingerprint is the
   // authority and the flag is only the fast path.
-  const read = await readCache('inventory', 'fp-2', { stateDir });
-  assert.deepEqual(read, { hit: false, reason: 'stale-inputs' });
+  writeFileSync(input, '{"enabledPlugins":{"p@m":true}}', 'utf8');
+
+  assert.deepEqual(await readCache('inventory', { stateDir }), {
+    hit: false,
+    reason: 'stale-inputs',
+  });
+});
+
+test('CREATING a recorded-but-absent input invalidates', async (t) => {
+  const stateDir = tempState(t);
+  const present = writeInput(stateDir, 'settings.json', '{}');
+  const absent = path.join(stateDir, 'project-settings.json');
+
+  // The absent file is fingerprinted as absent, which is the only way its
+  // later creation can be noticed at all.
+  await writeCache('inventory', [present, absent], { ok: true }, { stateDir });
+  assert.equal((await readCache('inventory', { stateDir })).hit, true);
+
+  writeFileSync(absent, '{}', 'utf8');
+  assert.equal((await readCache('inventory', { stateDir })).reason, 'stale-inputs');
+});
+
+test('an entry recording NO inputs is unusable, not trivially fresh', async (t) => {
+  const stateDir = tempState(t);
+  await writeCache('inventory', [], { ok: true }, { stateDir });
+
+  // Nothing could ever invalidate it, so it would be served forever.
+  assert.equal((await readCache('inventory', { stateDir })).reason, 'stale-inputs');
 });
 
 test('a bumped cache format is a miss, not a parse attempt', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   const target = path.join(cacheDir(stateDir), 'inventory.json');
   const entry = JSON.parse(readFileSync(target, 'utf8'));
   assert.equal(entry.cacheFormatVersion, CACHE_FORMAT_VERSION);
   writeFileSync(target, JSON.stringify({ ...entry, cacheFormatVersion: 999 }), 'utf8');
 
-  assert.deepEqual(await readCache('inventory', 'fp-1', { stateDir }), {
+  assert.deepEqual(await readCache('inventory', { stateDir }), {
     hit: false,
     reason: 'format-changed',
   });
@@ -162,28 +208,44 @@ test('a bumped cache format is a miss, not a parse attempt', async (t) => {
 
 test('an entry written against a different payload schema is a miss', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   const target = path.join(cacheDir(stateDir), 'inventory.json');
   const entry = JSON.parse(readFileSync(target, 'utf8'));
   writeFileSync(target, JSON.stringify({ ...entry, schemaVersion: 0 }), 'utf8');
 
-  assert.equal((await readCache('inventory', 'fp-1', { stateDir })).reason, 'format-changed');
+  assert.equal((await readCache('inventory', { stateDir })).reason, 'format-changed');
+});
+
+test('an entry with no inputs array at all is format-changed, not a crash', async (t) => {
+  const stateDir = tempState(t);
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
+
+  const target = path.join(cacheDir(stateDir), 'inventory.json');
+  const { inputs, ...withoutInputs } = JSON.parse(readFileSync(target, 'utf8'));
+  assert.ok(Array.isArray(inputs));
+  writeFileSync(target, JSON.stringify(withoutInputs), 'utf8');
+
+  // An entry written by a build that predates input recording.
+  assert.equal((await readCache('inventory', { stateDir })).reason, 'format-changed');
 });
 
 test('a truncated entry self-heals rather than crashing the run', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   // An interrupted write, or a full disk.
   writeFileSync(path.join(cacheDir(stateDir), 'inventory.json'), '{"cacheFormat', 'utf8');
 
-  const read = await readCache('inventory', 'fp-1', { stateDir });
+  const read = await readCache('inventory', { stateDir });
   assert.equal(read.hit, false);
   assert.equal(read.reason, 'unreadable');
 
-  assert.deepEqual(await writeCache('inventory', 'fp-1', { ok: true }, { stateDir }), []);
-  assert.equal((await readCache('inventory', 'fp-1', { stateDir })).hit, true);
+  assert.deepEqual(await writeCache('inventory', [input], { ok: true }, { stateDir }), []);
+  assert.equal((await readCache('inventory', { stateDir })).hit, true);
 });
 
 // ---------------------------------------------------------------------------
@@ -244,7 +306,7 @@ test('an unwritable state dir yields a warning, not a throw', async (t) => {
   // unlike chmod tricks, which are a no-op for an administrator on Windows.
   writeFileSync(path.join(root, 'cache'), 'not a directory', 'utf8');
 
-  const warnings = await writeCache('inventory', 'fp-1', { ok: true }, { stateDir: root });
+  const warnings = await writeCache('inventory', [path.join(root, 'x.json')], { ok: true }, { stateDir: root });
 
   assert.equal(warnings.length, 1);
   assert.equal(warnings[0].code, 'partial');
@@ -262,14 +324,15 @@ test('markDirty on an unwritable state dir does not throw — hooks must not fai
 
 test('no temp file survives a failed write', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
 
   const before = readFileSync(path.join(cacheDir(stateDir), 'inventory.json'), 'utf8');
 
   // A value JSON.stringify cannot serialise.
   const circular = {};
   circular.self = circular;
-  const warnings = await writeCache('inventory', 'fp-2', circular, { stateDir });
+  const warnings = await writeCache('inventory', [input], circular, { stateDir });
 
   assert.equal(warnings.length, 1);
   const { readdirSync } = await import('node:fs');
@@ -283,16 +346,14 @@ test('no temp file survives a failed write', async (t) => {
 
 test('clearCache drops everything, dirty flag included', async (t) => {
   const stateDir = tempState(t);
-  await writeCache('inventory', 'fp-1', { ok: true }, { stateDir });
+  const input = writeInput(stateDir, 'settings.json', '{}');
+  await writeCache('inventory', [input], { ok: true }, { stateDir });
   await markDirty(stateDir);
 
   await clearCache({ stateDir });
 
   assert.equal(await isDirty(stateDir), false);
-  assert.deepEqual(await readCache('inventory', 'fp-1', { stateDir }), {
-    hit: false,
-    reason: 'absent',
-  });
+  assert.deepEqual(await readCache('inventory', { stateDir }), { hit: false, reason: 'absent' });
 });
 
 test('clearing an already-absent cache is a no-op, not an error', async (t) => {

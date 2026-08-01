@@ -51,7 +51,7 @@ import { createRegistryCollector } from '../../src/collectors/registry.ts';
 import { collectSkills } from '../../src/collectors/skills.ts';
 import { runCollector } from '../../src/collectors/isolate.ts';
 import { buildInventory } from '../../src/services/inventory.ts';
-import { fingerprintInputs, readCache, writeCache } from '../../src/services/cache.ts';
+import { readCache, writeCache } from '../../src/services/cache.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const fixtureRoot = path.join(repoRoot, 'fixtures');
@@ -162,15 +162,13 @@ test('📏 a cached read completes under 200ms at reference scale', async (t) =>
   ];
 
   const inventory = await coldRun();
-  const fingerprint = await fingerprintInputs(inputs);
-  assert.deepEqual(await writeCache('inventory', fingerprint, inventory, { stateDir }), []);
+  assert.deepEqual(await writeCache('inventory', inputs, inventory, { stateDir }), []);
 
-  // The measured path is what `status --cached` actually does: fingerprint the
-  // inputs, then read. Timing the read alone would flatter the number by
-  // omitting the N stats that make the answer trustworthy.
+  // The measured path is exactly what `status --cached` does — and the read
+  // re-fingerprints the inputs recorded in the entry, so the N stats that make
+  // the answer trustworthy are inside the measurement rather than skipped.
   const started = performance.now();
-  const readFingerprint = await fingerprintInputs(inputs);
-  const read = await readCache('inventory', readFingerprint, { stateDir });
+  const read = await readCache('inventory', { stateDir });
   const elapsed = performance.now() - started;
 
   t.diagnostic(`cached read at reference scale: ${ms(elapsed)} (budget ${BUDGET_CACHED_MS}ms)`);
@@ -184,15 +182,14 @@ test('the cached path is materially cheaper than the cold one', async (t) => {
   t.after(() => rmSync(stateDir, { recursive: true, force: true }));
 
   const inputs = [path.join(scaleHome, '.claude.json')];
-  const fingerprint = await fingerprintInputs(inputs);
-  await writeCache('inventory', fingerprint, await coldRun(), { stateDir });
+  await writeCache('inventory', inputs, await coldRun(), { stateDir });
 
   const coldStarted = performance.now();
   await coldRun();
   const cold = performance.now() - coldStarted;
 
   const cachedStarted = performance.now();
-  await readCache('inventory', await fingerprintInputs(inputs), { stateDir });
+  await readCache('inventory', { stateDir });
   const cached = performance.now() - cachedStarted;
 
   t.diagnostic(`cold ${ms(cold)} vs cached ${ms(cached)}`);
