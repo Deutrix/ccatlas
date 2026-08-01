@@ -24,6 +24,7 @@ import {
   buildInventory,
   detectShadowing,
   mergeMarketplaces,
+  mergeMcpSources,
   mergePlugins,
   reconcile,
   resolveVersion,
@@ -600,6 +601,134 @@ test('the real config collector reconciles enabled against the registry layer', 
 
   const plugin = inventory.plugins.find((p) => p.id.name === firstKey);
   assert.equal(plugin.reconciled.enabled.conflictsWith.value, declared);
+});
+
+// ---------------------------------------------------------------------------
+// MCP — a union, not a preference (defect D3)
+// ---------------------------------------------------------------------------
+
+const server = (name, over = {}) => ({
+  id: { name, scope: 'user', kind: 'mcp-server' },
+  origin: 'personal',
+  state: 'enabled',
+  source: 'file',
+  transport: 'stdio',
+  connection: 'unknown',
+  ...over,
+});
+
+test('both MCP sources survive — neither substitutes for the other', () => {
+  const fromCli = [
+    server('plugin:ecc:github', { owningPlugin: 'ecc', command: 'npx' }),
+    server('plugin:ecc:exa', { owningPlugin: 'ecc', transport: 'http' }),
+  ];
+  const fromMcp = [server('browsermcp'), server('claude-flow')];
+
+  const { servers } = mergeMcpSources(fromCli, fromMcp);
+
+  // This was `payload(inputs.mcp) ?? cli?.mcpServers ?? []` — a `??` where a
+  // union belonged, which dropped 7 of 10 servers on the reference machine
+  // every time the mcp collector succeeded, which is always.
+  assert.equal(servers.length, 4);
+  assert.equal(servers.filter((s) => s.owningPlugin !== undefined).length, 2);
+});
+
+test('either source alone still yields that source', () => {
+  assert.equal(mergeMcpSources([server('a')], []).servers.length, 1);
+  assert.equal(mergeMcpSources([], [server('b')]).servers.length, 1);
+  assert.deepEqual(mergeMcpSources([], []).servers, []);
+});
+
+test('a name in BOTH sources keeps the config side command, args and env', () => {
+  const fromCli = [server('shared', { command: 'npx', args: ['-y', 'x'], env: { A: '1' } })];
+  const fromMcp = [server('shared', { command: undefined, connection: 'connected' })];
+
+  const { servers } = mergeMcpSources(fromCli, fromMcp);
+
+  assert.equal(servers.length, 1, 'the same server at the same scope is one entity');
+  // `mcp get` refuses to describe a plugin stdio server at all, so the config
+  // record is the richer one — the same call the cli collector makes internally.
+  assert.equal(servers[0].command, 'npx');
+  assert.deepEqual(servers[0].args, ['-y', 'x']);
+  assert.equal(servers[0].connection, 'connected');
+});
+
+test('the same name at DIFFERENT scopes stays two servers', () => {
+  const { servers } = mergeMcpSources(
+    [server('dual')],
+    [{ ...server('dual'), id: { name: 'dual', scope: 'project', kind: 'mcp-server' } }],
+  );
+
+  // A project `.mcp.json` server and a user-scope one are different entities
+  // with different approval states.
+  assert.equal(servers.length, 2);
+});
+
+test('a connection-state disagreement is reported, not resolved', () => {
+  // Unreachable in a default run today — `mcp list` is skipped, so the CLI
+  // side is `unknown` for every server. Tested concretely so it is not
+  // discovered broken in Phase 2 when includeMcpList gets a flag.
+  const { warnings } = mergeMcpSources(
+    [server('s', { connection: 'connected' })],
+    [server('s', { connection: 'failed' })],
+  );
+
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0].code, 'reconciliation');
+  assert.match(warnings[0].message, /connected.*failed/);
+});
+
+test('an UNKNOWN cli connection state is not a disagreement', () => {
+  // The default run's state. Warning on it would fire on every server, every
+  // run, and train the user to ignore the whole warning channel.
+  const { warnings } = mergeMcpSources(
+    [server('s', { connection: 'unknown' })],
+    [server('s', { connection: 'connected' })],
+  );
+
+  assert.deepEqual(warnings, []);
+});
+
+// ---------------------------------------------------------------------------
+// Per-section reporting — what --verbose renders
+// ---------------------------------------------------------------------------
+
+test('every passed collector gets a section report with its cost', () => {
+  const inventory = buildInventory({
+    cli: {
+      name: 'cli',
+      status: 'ok',
+      ok: true,
+      data: { plugins: [], available: [], marketplaces: [], mcpServers: [] },
+      warnings: [{ code: 'partial', message: 'mcp list skipped' }],
+      elapsedMs: 12,
+    },
+    registry: {
+      name: 'registry',
+      status: 'failed',
+      ok: false,
+      data: null,
+      mode: 'threw',
+      error: { code: 'x', message: 'boom' },
+      warnings: [],
+      elapsedMs: 3,
+    },
+  });
+
+  assert.equal(inventory.sections.length, 2);
+
+  const cli = inventory.sections.find((s) => s.name === 'cli');
+  assert.equal(cli.status, 'partial');
+  assert.equal(cli.elapsedMs, 12);
+
+  const registry = inventory.sections.find((s) => s.name === 'registry');
+  assert.equal(registry.status, 'failed');
+  // The reason, not just the fact — this is what --verbose prints.
+  assert.equal(registry.error, 'boom');
+});
+
+test('a collector that was never passed gets no section report', () => {
+  assert.deepEqual(buildInventory({}).sections, []);
 });
 
 // ---------------------------------------------------------------------------

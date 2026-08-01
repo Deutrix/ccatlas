@@ -22,7 +22,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { createCliCollector } from '../../src/collectors/cli.ts';
-import { inventoryInputs, status, STATUS_CACHE_KEY } from '../../src/services/status.ts';
+import { inventoryInputs, persistInventory, status, STATUS_CACHE_KEY } from '../../src/services/status.ts';
 import { readCache } from '../../src/services/cache.ts';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -237,22 +237,82 @@ test('fixtureRoot takes precedence over roots.home, for the collectors that hono
   );
 });
 
-test('a degraded run is NOT cached', async (t) => {
+test('a degraded run is NOT cached, and says why', async (t) => {
+  const stateDir = tempState(t);
+
+  // Built directly rather than provoked through `status()`: the fixture corpus
+  // is always healthy, so a test that waits for a real failure asserts the
+  // happy path and proves nothing. That is what the first version of this test
+  // did — it early-returned every single run.
+  const degraded = {
+    inventory: {
+      plugins: [],
+      marketplaces: [],
+      mcpServers: [],
+      skills: [],
+      agents: [],
+      commands: [],
+      shadowing: [],
+      degraded: ['cli'],
+      partial: [],
+      sections: [{ name: 'cli', status: 'failed', elapsedMs: 3, error: 'boom' }],
+      warnings: [],
+      elapsedMs: 3,
+    },
+    config: undefined,
+    elapsedMs: 3,
+  };
+
+  const warnings = await persistInventory(degraded, { roots: { home: scaleHome } }, { stateDir });
+
+  // Caching a hole would serve it back for as long as the inputs sit still —
+  // and a broken collector does not depend on the inputs changing. The next
+  // run would be fast, wrong, and indistinguishable from a good one.
+  assert.equal((await readCache(STATUS_CACHE_KEY, { stateDir })).hit, false);
+  assert.equal(warnings.length, 1);
+  assert.match(warnings[0].message, /not cached: cli degraded/);
+});
+
+test('a healthy run through the same function IS cached', async (t) => {
+  const stateDir = tempState(t);
+  const healthy = {
+    inventory: {
+      plugins: [],
+      marketplaces: [],
+      mcpServers: [],
+      skills: [],
+      agents: [],
+      commands: [],
+      shadowing: [],
+      degraded: [],
+      partial: [],
+      sections: [{ name: 'cli', status: 'ok', elapsedMs: 3 }],
+      warnings: [],
+      elapsedMs: 3,
+    },
+    config: undefined,
+    elapsedMs: 3,
+  };
+
+  // The positive control: without it, the assertion above would pass against a
+  // function that never caches anything.
+  assert.deepEqual(await persistInventory(healthy, { roots: { home: scaleHome } }, { stateDir }), []);
+  assert.equal((await readCache(STATUS_CACHE_KEY, { stateDir })).hit, true);
+});
+
+test('--cached populates on a miss, so the flag is self-healing', async (t) => {
   const options = scaleRun(t);
 
-  // A home that does not exist degrades nothing by itself — collectors report
-  // absence as partial. So force a real failure by pointing the state dir at
-  // a file and checking the cache stays empty for a degraded inventory.
-  const result = await status(options);
-  if (result.inventory.degraded.length === 0) {
-    // The fixture corpus is healthy, so assert the contract directly on the
-    // documented behaviour rather than fabricating a broken collector here —
-    // the negative case is covered in inventory.test.mjs.
-    assert.equal((await readCache(STATUS_CACHE_KEY, { stateDir: options.stateDir })).hit, true);
-    return;
-  }
+  const miss = await status({ ...options, cached: true });
+  assert.equal(miss.cacheMiss, 'absent');
 
-  assert.equal((await readCache(STATUS_CACHE_KEY, { stateDir: options.stateDir })).hit, false);
+  // Deliberate: the alternative is a machine where --cached never works until
+  // somebody happens to run status without it. The cost is that this second
+  // call shows no sign the first was cold — which is why the miss warning is
+  // emitted rather than left to be inferred.
+  const second = await status({ ...options, cached: true });
+  assert.equal(second.origin, 'cache');
+  assert.equal(second.cacheMiss, undefined);
 });
 
 test('an unwritable cache warns and still returns a correct answer', async (t) => {

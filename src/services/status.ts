@@ -30,6 +30,13 @@
  * got a 2s answer should be told why, and a script that asked for it and got a
  * miss needs to know the number it printed is fresh rather than the cached one
  * it expected.
+ *
+ * **A miss also populates the cache**, so `--cached` is not purely a read. That
+ * is deliberate — it makes the flag self-healing, and the alternative is a
+ * machine where `--cached` never works until someone happens to run `status`
+ * without it. The cost is that the *next* `--cached` reports `origin: 'cache'`
+ * and shows no sign the previous one was cold; the warning on the miss itself
+ * is what carries that, which is why it is emitted rather than inferred.
  */
 
 import os from 'node:os';
@@ -64,8 +71,9 @@ export interface StatusOptions {
   readonly stateDir?: string;
   readonly toolVersion?: string;
   /**
-   * Opt in to `claude mcp list`. Off by default and forced off by `--offline`:
-   * it dials every configured server and blows the T1.11 budget on its own.
+   * Opt in to `claude mcp list`. Off by default because it dials every
+   * configured server and blows the T1.11 budget on its own; the collector
+   * refuses it under `--offline` regardless.
    */
   readonly includeMcpList?: boolean;
 }
@@ -123,7 +131,7 @@ export function inventoryInputs(home: string, config: ConfigData | undefined): s
 // Collection
 // ---------------------------------------------------------------------------
 
-interface Collected {
+export interface Collected {
   readonly inventory: Inventory;
   readonly config: ConfigData | undefined;
   readonly elapsedMs: number;
@@ -226,7 +234,7 @@ export async function status(options: StatusOptions = {}): Promise<StatusResult>
     };
 
     const warnings = [warning, ...collected.inventory.warnings];
-    const persisted = await persist(collected, options, cacheOptions);
+    const persisted = await persistInventory(collected, options, cacheOptions);
 
     return {
       inventory: { ...collected.inventory, warnings: [...warnings, ...persisted] },
@@ -237,7 +245,7 @@ export async function status(options: StatusOptions = {}): Promise<StatusResult>
   }
 
   const collected = await collect(options);
-  const persisted = await persist(collected, options, cacheOptions);
+  const persisted = await persistInventory(collected, options, cacheOptions);
   const warnings = [...collected.inventory.warnings, ...persisted];
 
   return {
@@ -247,15 +255,24 @@ export async function status(options: StatusOptions = {}): Promise<StatusResult>
   };
 }
 
-async function persist(
+/**
+ * Records the answer, unless it is one that should not be recorded.
+ *
+ * Exported so the refusal branch can be tested directly. Reaching it through
+ * `status()` would mean engineering a genuinely failing collector, and a test
+ * that cannot force the condition ends up asserting the healthy path and
+ * quietly proving nothing — which is what the first version of it did.
+ */
+export async function persistInventory(
   collected: Collected,
   options: StatusOptions,
-  cacheOptions: { stateDir?: string; toolVersion?: string },
+  cacheOptions: { stateDir?: string; toolVersion?: string } = {},
 ): Promise<InventoryWarning[]> {
   // A degraded run is not cached. Recording an answer that is missing a
   // section would serve that hole back for as long as the inputs sit still —
   // and the inputs sitting still is exactly what a broken collector does not
-  // depend on.
+  // depend on. The next run would then be fast, wrong, and indistinguishable
+  // from a good one.
   if (collected.inventory.degraded.length > 0) {
     return [
       {

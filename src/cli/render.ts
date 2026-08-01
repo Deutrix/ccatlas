@@ -60,12 +60,41 @@ function describeSection(
 ): { text: string; broken: boolean } {
   const broken = collectors.filter((name) => inventory.degraded.includes(name));
   if (broken.length > 0) {
-    return { text: `${label}: unavailable (${broken.join(', ')} failed)`, broken: true };
+    // A section can be degraded and still hold real rows: a machine whose
+    // `cli` collector died still has everything the registry file knows. The
+    // count is stated alongside the failure rather than suppressed, because
+    // hiding data we actually have is its own kind of wrong answer — the
+    // header's job is to stop the number being read as complete.
+    const partial = count > 0 ? `, ${count} known from the other source` : '';
+    return { text: `${label}: unavailable (${broken.join(', ')} failed${partial})`, broken: true };
   }
 
   const incomplete = collectors.filter((name) => inventory.partial.includes(name));
   const suffix = incomplete.length > 0 ? ' (incomplete)' : '';
   return { text: `${label}: ${count}${suffix}`, broken: false };
+}
+
+/**
+ * Per-section outcome and cost. Only under `--verbose`, which is what the flag
+ * promises: per-section detail *and* timings.
+ */
+function sectionLines(inventory: Inventory, options: RenderOptions): string[] {
+  if (!options.verbose || inventory.sections.length === 0) return [];
+
+  const c = paint(options.color);
+  const lines = ['', c('Collectors', 'bold')];
+
+  for (const section of [...inventory.sections].sort((a, b) => b.elapsedMs - a.elapsedMs)) {
+    const style: Style = section.status === 'failed' ? 'red' : section.status === 'partial' ? 'yellow' : 'green';
+    const detail = section.error !== undefined ? ` — ${section.error}` : '';
+    lines.push(`  ${section.name.padEnd(9)} ${c(section.status.padEnd(7), style)} ${section.elapsedMs}ms${detail}`);
+  }
+
+  // Sorted slowest first and totalled, so a section that dominates the T1.11
+  // budget is attributable rather than merely felt. Not the sum of the parts:
+  // the collectors run concurrently.
+  lines.push(c(`  ${'total'.padEnd(9)} ${''.padEnd(7)} ${inventory.elapsedMs}ms wall clock`, 'dim'));
+  return lines;
 }
 
 const versionOf = (plugin: MergedPlugin): string => {
@@ -137,7 +166,10 @@ export function renderTree(result: StatusResult, options: RenderOptions): string
     lines.push(described.broken ? c(described.text, 'red') : described.text);
   }
 
-  if (inventory.plugins.length > 0 && !inventory.degraded.includes('cli')) {
+  // Rendered whenever there are rows, degraded `cli` included. A registry-only
+  // machine has real plugins and hiding them would discard data we hold; the
+  // section header above is what stops the list reading as complete.
+  if (inventory.plugins.length > 0) {
     lines.push('', c('Plugins', 'bold'));
     const byMarketplace = new Map<string, MergedPlugin[]>();
     for (const plugin of inventory.plugins) {
@@ -192,6 +224,7 @@ export function renderTree(result: StatusResult, options: RenderOptions): string
     }
   }
 
+  lines.push(...sectionLines(inventory, options));
   lines.push(...warningLines(inventory, options));
   return lines.join('\n');
 }
@@ -238,6 +271,7 @@ export function renderFlat(result: StatusResult, options: RenderOptions): string
     lines.push(c(`degraded\t${name}\t-\tsection unavailable`, 'red'));
   }
 
+  lines.push(...sectionLines(inventory, options));
   lines.push(...warningLines(inventory, options));
   return lines.join('\n');
 }

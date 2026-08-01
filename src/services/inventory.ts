@@ -93,8 +93,23 @@ export interface Inventory {
   readonly degraded: string[];
   /** Sections that succeeded but knowingly returned less than everything. */
   readonly partial: string[];
+  /**
+   * Per-collector outcome and cost. `degraded` and `partial` are the same
+   * information as name lists, kept because almost every caller wants only
+   * those; this is what `--verbose` renders and what makes a slow section
+   * attributable rather than merely felt.
+   */
+  readonly sections: SectionReport[];
   readonly warnings: InventoryWarning[];
   readonly elapsedMs: number;
+}
+
+export interface SectionReport {
+  readonly name: string;
+  readonly status: 'ok' | 'partial' | 'failed';
+  readonly elapsedMs: number;
+  /** Present on a failure. The reason, not just the fact. */
+  readonly error?: string;
 }
 
 /** Collector outputs, each still carrying whether its section is trustworthy. */
@@ -646,6 +661,8 @@ export function buildInventory(inputs: InventoryInputs): Inventory {
     ['skills', inputs.skills],
   ];
 
+  const reports: SectionReport[] = [];
+
   for (const [name, outcome] of sections) {
     if (outcome === undefined) continue;
 
@@ -655,8 +672,16 @@ export function buildInventory(inputs: InventoryInputs): Inventory {
     // the section names still look right.
     for (const warning of outcome.warnings) warnings.push({ ...warning, collector: name });
 
+    const incomplete = outcome.warnings.some((w) => w.code === 'partial');
     if (outcome.status === 'failed') degraded.push(name);
-    else if (outcome.warnings.some((w) => w.code === 'partial')) partial.push(name);
+    else if (incomplete) partial.push(name);
+
+    reports.push({
+      name,
+      status: outcome.status === 'failed' ? 'failed' : incomplete ? 'partial' : 'ok',
+      elapsedMs: Math.round(outcome.elapsedMs),
+      ...(outcome.status === 'failed' ? { error: outcome.error.message } : {}),
+    });
   }
 
   const cli = payload(inputs.cli);
@@ -762,6 +787,7 @@ export function buildInventory(inputs: InventoryInputs): Inventory {
     shadowing: shadowing.groups,
     degraded,
     partial,
+    sections: reports,
     warnings,
     elapsedMs: inputs.elapsedMs ?? 0,
   };

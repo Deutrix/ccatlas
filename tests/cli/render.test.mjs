@@ -29,6 +29,7 @@ const emptyInventory = (over = {}) => ({
   shadowing: [],
   degraded: [],
   partial: [],
+  sections: [],
   warnings: [],
   elapsedMs: 12,
   ...over,
@@ -202,6 +203,39 @@ test('a sha-sourced version is abbreviated and labelled, not shown raw', () => {
   assert.ok(!text.includes('a'.repeat(40)), 'a 40-char sha would wreck the column');
 });
 
+test('--verbose renders per-section detail AND timings, as the help promises', () => {
+  const inventory = emptyInventory({
+    sections: [
+      { name: 'cli', status: 'partial', elapsedMs: 40 },
+      { name: 'registry', status: 'failed', elapsedMs: 3, error: 'boom' },
+      { name: 'skills', status: 'ok', elapsedMs: 120 },
+    ],
+    degraded: ['registry'],
+    partial: ['cli'],
+  });
+
+  const quiet = renderTree(result(inventory), PLAIN);
+  const loud = renderTree(result(inventory), { color: false, verbose: true });
+
+  assert.ok(!/Collectors/.test(quiet), 'per-section detail is verbose-only');
+  assert.match(loud, /Collectors/);
+  // Slowest first, so a section dominating the T1.11 budget is attributable
+  // rather than merely felt.
+  assert.ok(loud.indexOf('skills') < loud.indexOf('cli'), 'sections must sort slowest first');
+  assert.match(loud, /registry\s+failed\s+3ms — boom/);
+  assert.match(loud, /total.*wall clock/);
+});
+
+test('the flag documented as "detail and timings" delivers both', () => {
+  // Guards the mismatch class that --offline already hit once: a documented
+  // flag that mostly does not act.
+  const inventory = emptyInventory({ sections: [{ name: 'cli', status: 'ok', elapsedMs: 7 }] });
+  const loud = renderTree(result(inventory), { color: false, verbose: true });
+
+  assert.match(loud, /cli/, 'per-section detail');
+  assert.match(loud, /7ms/, 'timings');
+});
+
 test('--verbose adds the installed sha and the rule that fired', () => {
   const inventory = emptyInventory({
     plugins: [
@@ -215,12 +249,22 @@ test('--verbose adds the installed sha and the rule that fired', () => {
   assert.match(renderTree(result(inventory), { color: false, verbose: true }), /via plugin-json/);
 });
 
-test('the plugin tree is suppressed when the cli section is degraded', () => {
+test('a degraded cli still shows the rows the registry layer knows', () => {
   const inventory = emptyInventory({ plugins: [plugin({ sources: ['file'] })], degraded: ['cli'] });
   const text = renderTree(result(inventory), PLAIN);
-  // Rendering a tree from half the evidence, under a heading that says the
-  // section is unavailable, is a contradiction on one screen.
-  assert.match(text, /Plugins: unavailable/);
+
+  // A machine whose `cli` collector died still has everything
+  // installed_plugins.json knows. Suppressing the list would discard data we
+  // hold; the header is what stops the count being read as complete.
+  assert.match(text, /Plugins: unavailable \(cli failed, 1 known from the other source\)/);
+  assert.match(text, /─ p 1\.0\.0/, 'the file-only rows must still be listed');
+  assert.match(text, /file-only/, 'and be marked as half-evidenced');
+});
+
+test('a degraded section with genuinely nothing says only that', () => {
+  const text = renderTree(result(emptyInventory({ degraded: ['cli'] })), PLAIN);
+  assert.match(text, /Plugins: unavailable \(cli failed\)/);
+  assert.ok(!/known from/.test(text), 'no count to report when there are no rows');
 });
 
 // ---------------------------------------------------------------------------
