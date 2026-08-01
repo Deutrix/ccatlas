@@ -22,6 +22,7 @@
 import type { DoctorReport, Severity } from '../services/doctor.ts';
 import type { ApplyPlan, ExecutedAction } from '../services/apply.ts';
 import type { UsageResult } from '../services/analytics.ts';
+import type { ImportPlan } from '../services/import.ts';
 import type { UpdatesReport } from '../services/updates.ts';
 import type { Inventory, MergedPlugin } from '../services/inventory.ts';
 import type { StatusResult } from '../services/status.ts';
@@ -569,5 +570,56 @@ export function renderUsage(
   }
 
   lines.push('', c(result.methodology, 'dim'));
+  return lines.join('\n');
+}
+
+/**
+ * Renders an import plan — T5.18.
+ *
+ * **Every executable surface in full.** No collapsing behind "12 actions".
+ * An MCP server's command line is printed because registering one registers
+ * a program Claude Code will run, and that is the single thing a user most
+ * needs to see before agreeing.
+ */
+export function renderImportPlan(plan: ImportPlan, options: RenderOptions): string {
+  const c = paint(options.color);
+  const lines = [c('ccatlas import — plan', 'bold')];
+
+  if (plan.actions.length === 0) {
+    lines.push('', c('nothing to do — this bundle is already satisfied', 'green'));
+  } else {
+    lines.push('', c(`${plan.actions.length} action(s):`, 'bold'));
+    plan.actions.forEach((action, index) => {
+      lines.push(`  ${index + 1}. ${c(action.kind, 'bold')} ${action.subject}`);
+      lines.push(`     ${c(action.reason, 'dim')}`);
+      if (action.argv !== undefined) {
+        lines.push(`     ${c(`claude ${action.argv.join(' ')}`, 'green')}`);
+      }
+      if (action.executes !== undefined) {
+        lines.push(
+          `     ${c('runs:', 'yellow')} ${action.executes.command} ${action.executes.args.join(' ')}`,
+        );
+      }
+      if (action.conflict !== undefined) {
+        lines.push(
+          `     ${c(`conflict: local ${action.conflict.local}, bundle ${action.conflict.bundle}`, 'yellow')}`,
+        );
+      }
+    });
+  }
+
+  if (plan.satisfied.length > 0) {
+    lines.push('', c(`Already satisfied (${plan.satisfied.length})`, 'dim'));
+  }
+
+  if (plan.problems.length > 0) {
+    lines.push('', c('Pre-flight', 'bold'));
+    for (const problem of plan.problems) {
+      lines.push(
+        `  ${c(problem.blocking ? 'BLOCKING' : 'note', problem.blocking ? 'red' : 'yellow')} ${problem.message}`,
+      );
+    }
+  }
+
   return lines.join('\n');
 }

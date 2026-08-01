@@ -19,6 +19,7 @@ import {
   renderTree,
   renderUpdates,
   renderUsage,
+  renderImportPlan,
 } from './cli/render.ts';
 import { envelope } from './json.ts';
 import { doctor } from './services/doctor-run.ts';
@@ -31,6 +32,7 @@ import {
 } from './services/apply.ts';
 import { STALE_MARKETPLACE_DAYS } from './services/updates.ts';
 import { usage } from './services/analytics-run.ts';
+import { exportBundle, importBundle, rollback } from './services/import-run.ts';
 import { report, reportAllProjects } from './services/report-run.ts';
 import { updates } from './services/updates-run.ts';
 
@@ -187,6 +189,74 @@ export async function run(argv: readonly string[]): Promise<number> {
       }
 
       process.stdout.write(`${renderUsage(usageReport, renderOptions, parsed.flags.unused)}\n`);
+      return EXIT_OK;
+    }
+
+    if (parsed.command === 'export') {
+      const result = await exportBundle({
+        ...serviceOptions,
+        ...(parsed.flags.out !== undefined ? { outFile: parsed.flags.out } : {}),
+        allowSecrets: parsed.flags.allowSecrets,
+        allowHost: parsed.flags.allowHost,
+        toolVersion: VERSION,
+      });
+
+      if (!result.ok) {
+        // 🔒 T5.6 fails closed. The refusal names every value, so the user
+        // can fix them rather than reaching for --allow-secrets.
+        process.stderr.write(`ccatlas: ${result.reason}\n`);
+        for (const where of result.locations) process.stderr.write(`  ${where}\n`);
+        return EXIT_USAGE;
+      }
+
+      process.stdout.write(`wrote ${result.file} — ${(result.bytes / 1024).toFixed(1)}KB\n`);
+      for (const warning of result.warnings) process.stderr.write(`  ${warning}\n`);
+      return EXIT_OK;
+    }
+
+    if (parsed.command === 'rollback') {
+      const result = await rollback({
+        ...(parsed.flags.target !== undefined ? { to: parsed.flags.target } : {}),
+      });
+      process.stdout.write(`${result.message}\n`);
+      return result.ok ? EXIT_OK : EXIT_ERROR;
+    }
+
+    if (parsed.command === 'import') {
+      const outcome = await importBundle({
+        ...serviceOptions,
+        source: parsed.flags.target as string,
+        apply: parsed.flags.apply,
+        verify: parsed.flags.verify,
+        confirmed: parsed.flags.confirm,
+        // The CLI is a human surface. A skill invoking ccatlas gets the
+        // same refusals because trust.ts refuses on `remote`, not on who
+        // typed the command.
+        actor: 'human',
+      });
+
+      if (parsed.flags.json) {
+        const payload = envelope(parsed.command, VERSION, outcome);
+        process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+        return outcome.refused === undefined ? EXIT_OK : EXIT_USAGE;
+      }
+
+      if (outcome.plan !== undefined) {
+        process.stdout.write(`${renderImportPlan(outcome.plan, renderOptions)}\n`);
+      }
+      for (const warning of outcome.warnings) process.stderr.write(`  ${warning}\n`);
+
+      if (outcome.refused !== undefined) {
+        process.stderr.write(`\nccatlas: ${outcome.refused}\n`);
+        return EXIT_USAGE;
+      }
+
+      if (outcome.receipt !== undefined) {
+        process.stdout.write(
+          `\napplied ${outcome.receipt.actions.length} action(s); snapshot ${outcome.receipt.snapshot}\n`,
+        );
+        return outcome.receipt.ok ? EXIT_OK : EXIT_ERROR;
+      }
       return EXIT_OK;
     }
 

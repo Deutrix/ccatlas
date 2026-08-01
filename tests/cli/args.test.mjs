@@ -35,6 +35,10 @@ test('a bare command parses with every flag defaulted off', () => {
     allProjects: false,
     allowPaths: false,
     unused: false,
+    allowSecrets: false,
+    allowHost: false,
+    confirm: false,
+    verify: false,
   });
 });
 
@@ -241,4 +245,57 @@ test('--check and --apply are rejected on commands that do not have them', () =>
 test('updates is a known command', () => {
   assert.equal(run('updates').kind, 'run');
   assert.equal(run('updates').command, 'updates');
+});
+
+// ---------------------------------------------------------------------------
+// export / import / rollback
+// ---------------------------------------------------------------------------
+
+test('import takes its source as a positional', () => {
+  const parsed = run('import', './stack.bundle.json');
+  assert.equal(parsed.kind, 'run');
+  assert.equal(parsed.flags.target, './stack.bundle.json');
+});
+
+test('import without a source is a usage error', () => {
+  const parsed = run('import');
+  assert.equal(parsed.kind, 'error');
+  assert.match(parsed.errors[0], /needs a bundle source/);
+});
+
+test('--apply works on BOTH updates and import', () => {
+  // It means the same thing in each: run the plan rather than print it.
+  assert.equal(run('updates', '--apply').kind, 'run');
+  assert.equal(run('import', './b.json', '--apply').kind, 'run');
+});
+
+test('--apply is rejected on commands that cannot apply anything', () => {
+  for (const command of ['status', 'doctor', 'report', 'usage']) {
+    const parsed = parseArgs([command, '--apply']);
+    assert.equal(parsed.kind, 'error', command);
+    assert.match(parsed.errors[0], /--apply applies to/);
+  }
+});
+
+test('--check stays exclusive to updates', () => {
+  assert.equal(parseArgs(['import', './b.json', '--check']).kind, 'error');
+  assert.equal(run('updates', '--check').kind, 'run');
+});
+
+test('the confirmation flag is --confirm, never --yes', () => {
+  // It confirms THIS plan, which the user has just been shown, rather than
+  // agreeing to anything in advance.
+  assert.equal(run('import', './b.json', '--confirm').flags.confirm, true);
+  assert.equal(run('import', './b.json', '--yes').kind, 'error');
+});
+
+test('--allow-secrets and --allow-host parse on export', () => {
+  const parsed = run('export', '--allow-secrets', '--allow-host');
+  assert.equal(parsed.flags.allowSecrets, true);
+  assert.equal(parsed.flags.allowHost, true);
+});
+
+test('rollback --to takes a snapshot id', () => {
+  assert.equal(run('rollback', '--to', 'snap-1').flags.target, 'snap-1');
+  assert.match(parseArgs(['rollback', '--to']).errors[0], /needs a snapshot id/);
 });

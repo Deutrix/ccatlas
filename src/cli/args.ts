@@ -21,7 +21,16 @@ export const GLOBAL_FLAGS = [
   { flag: '--verbose', help: 'include per-section detail and timings' },
 ] as const;
 
-export const COMMANDS = ['status', 'doctor', 'updates', 'report', 'usage'] as const;
+export const COMMANDS = [
+  'status',
+  'doctor',
+  'updates',
+  'report',
+  'usage',
+  'export',
+  'import',
+  'rollback',
+] as const;
 export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
@@ -67,6 +76,21 @@ export interface Flags {
   readonly allowPaths: boolean;
   /** `usage --unused`. Zero invocations, sorted by what they cost to keep. */
   readonly unused: boolean;
+  /** `export --allow-secrets`. 🔒 Ships a live credential; the bundle becomes a secret. */
+  readonly allowSecrets: boolean;
+  /** `export --allow-host`. The hostname is redacted by default. */
+  readonly allowHost: boolean;
+  /**
+   * `import --confirm`. The interactive confirmation for a remote bundle.
+   *
+   * Deliberately NOT named `--yes`: it confirms *this plan*, which the user
+   * has just been shown, rather than agreeing to anything in advance.
+   */
+  readonly confirm: boolean;
+  /** `import --verify`. Demand a signature; absent is then a refusal. */
+  readonly verify: boolean;
+  /** The positional argument for `import` and `rollback --to`. */
+  readonly target?: string;
   /** `report --out <file>`. */
   readonly out?: string;
 }
@@ -91,6 +115,10 @@ const DEFAULTS: Flags = {
   allProjects: false,
   allowPaths: false,
   unused: false,
+  allowSecrets: false,
+  allowHost: false,
+  confirm: false,
+  verify: false,
 };
 
 /**
@@ -125,6 +153,11 @@ const suggest = (unknown: string): string => {
     '--all-projects',
     '--allow-paths',
     '--unused',
+    '--allow-secrets',
+    '--allow-host',
+    '--confirm',
+    '--verify',
+    '--to',
     '--help',
     '--version',
   ];
@@ -165,6 +198,18 @@ export function parseArgs(
     // The only value-taking flag. Handled before the switch so the value is
     // never mistaken for a positional — `--project .` would otherwise be
     // reported as an unknown command.
+    if (arg === '--to' || arg.startsWith('--to=')) {
+      const inline = arg.startsWith('--to=') ? arg.slice('--to='.length) : undefined;
+      const value = inline ?? args[index + 1];
+      if (inline === undefined) index += 1;
+      if (value === undefined || value === '' || isFlagLike(value)) {
+        errors.push('--to needs a snapshot id');
+        continue;
+      }
+      flags.target = value;
+      continue;
+    }
+
     if (arg === '--out' || arg.startsWith('--out=')) {
       const inline = arg.startsWith('--out=') ? arg.slice('--out='.length) : undefined;
       const value = inline ?? args[index + 1];
@@ -191,6 +236,11 @@ export function parseArgs(
     }
 
     if (!isFlagLike(arg)) {
+      if (command === 'import' && flags.target === undefined) {
+        // `import` takes one: the bundle source.
+        flags.target = arg;
+        continue;
+      }
       if (command !== undefined) {
         errors.push(`unexpected argument "${arg}" — ${command} takes no positional arguments`);
         continue;
@@ -254,6 +304,18 @@ export function parseArgs(
       case '--unused':
         flags.unused = true;
         break;
+      case '--allow-secrets':
+        flags.allowSecrets = true;
+        break;
+      case '--allow-host':
+        flags.allowHost = true;
+        break;
+      case '--confirm':
+        flags.confirm = true;
+        break;
+      case '--verify':
+        flags.verify = true;
+        break;
       default:
         errors.push(`unknown flag "${arg}".${suggest(arg)}`);
     }
@@ -266,17 +328,26 @@ export function parseArgs(
   if (errors.length > 0) return { kind: 'error', errors };
   if (command === undefined) return { kind: 'help' };
 
+  if (command === 'import' && flags.target === undefined) {
+    return { kind: 'error', errors: ['import needs a bundle source (a path, owner/repo, or a URL)'] };
+  }
+
   if (flags.check && flags.apply) {
     return {
       kind: 'error',
       errors: ['--check reports without changing anything; --apply changes things. Pick one.'],
     };
   }
+  // `--check` belongs to `updates` alone. `--apply` is shared with `import`,
+  // where it means the same thing: run the plan rather than only print it.
+  if (flags.check && command !== 'updates') {
+    return { kind: 'error', errors: ['--check applies to `updates`, not `' + command + '`'] };
+  }
 
-  if ((flags.check || flags.apply) && command !== 'updates') {
+  if (flags.apply && command !== 'updates' && command !== 'import') {
     return {
       kind: 'error',
-      errors: [`--${flags.check ? 'check' : 'apply'} applies to \`updates\`, not \`${command}\``],
+      errors: ['--apply applies to `updates` and `import`, not `' + command + '`'],
     };
   }
 
@@ -311,6 +382,9 @@ COMMANDS
   updates      version differences, stale pins, and marketplace staleness
   report       a self-contained HTML report you can send to someone
   usage        what you actually invoke, and what you never do
+  export       write a portable bundle of this stack
+  import       plan (and with --apply, perform) a bundle import
+  rollback     restore the last snapshot
 
 FLAGS
 ${flagHelp}
@@ -324,6 +398,11 @@ ${flagHelp}
   --all-projects  one report per known project, plus an index
   --allow-paths   permit --all-projects without --redact (paths WILL be written)
   --unused     list only what has never been invoked (usage only)
+  --allow-secrets  🔒 export a live credential; the bundle becomes a secret
+  --allow-host     include the hostname in the bundle (redacted by default)
+  --confirm    confirm the plan just shown (import --apply, remote sources)
+  --verify     require a signature; its absence is then a refusal
+  --to ID      which snapshot to restore (rollback)
   --help       print this message
   --version    print the version
 
