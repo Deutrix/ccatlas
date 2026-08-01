@@ -29,7 +29,7 @@ import {
   RELOAD_REMINDER,
 } from './services/apply.ts';
 import { STALE_MARKETPLACE_DAYS } from './services/updates.ts';
-import { report } from './services/report-run.ts';
+import { report, reportAllProjects } from './services/report-run.ts';
 import { updates } from './services/updates-run.ts';
 
 const VERSION = __CCATLAS_VERSION__;
@@ -126,6 +126,29 @@ export async function run(argv: readonly string[]): Promise<number> {
       // The one command where nonzero means findings. Reserved deliberately:
       // status and doctor exit 0 on findings so this idiom stays unambiguous.
       return parsed.flags.check ? checkExitCode(report) : EXIT_OK;
+    }
+
+    if (parsed.command === 'report' && parsed.flags.allProjects) {
+      const swept = await reportAllProjects({
+        ...serviceOptions,
+        ...(parsed.flags.out !== undefined ? { outDir: parsed.flags.out } : {}),
+        redact: parsed.flags.redact,
+        allowPaths: parsed.flags.allowPaths,
+        toolVersion: VERSION,
+      });
+
+      if (swept.refused !== undefined) {
+        // 🔒 T3.14. Refused before collecting anything: a command that reads
+        // for two seconds and THEN declines has already read what it was told
+        // not to disclose.
+        process.stderr.write(`ccatlas: ${swept.refused}\n`);
+        return EXIT_USAGE;
+      }
+
+      process.stdout.write(
+        `wrote ${swept.written} report(s)${swept.failed > 0 ? `, ${swept.failed} failed` : ''} — ${swept.indexFile ?? ''}\n`,
+      );
+      return EXIT_OK;
     }
 
     if (parsed.command === 'report') {

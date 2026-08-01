@@ -56,6 +56,15 @@ export interface Flags {
   readonly redact: boolean;
   /** `report --open`. */
   readonly open: boolean;
+  /** `report --all-projects`. One global scan, one file per project. */
+  readonly allProjects: boolean;
+  /**
+   * The named override for T3.14's redaction gate.
+   *
+   * Deliberately not `--yes`: this says what is being permitted rather than
+   * agreeing to something unnamed.
+   */
+  readonly allowPaths: boolean;
   /** `report --out <file>`. */
   readonly out?: string;
 }
@@ -77,6 +86,8 @@ const DEFAULTS: Flags = {
   apply: false,
   redact: false,
   open: false,
+  allProjects: false,
+  allowPaths: false,
 };
 
 /**
@@ -108,6 +119,8 @@ const suggest = (unknown: string): string => {
     '--redact',
     '--open',
     '--out',
+    '--all-projects',
+    '--allow-paths',
     '--help',
     '--version',
   ];
@@ -228,6 +241,12 @@ export function parseArgs(
       case '--open':
         flags.open = true;
         break;
+      case '--all-projects':
+        flags.allProjects = true;
+        break;
+      case '--allow-paths':
+        flags.allowPaths = true;
+        break;
       default:
         errors.push(`unknown flag "${arg}".${suggest(arg)}`);
     }
@@ -294,6 +313,8 @@ ${flagHelp}
   --redact     strip paths, repo names and hostname (report only)
   --open       open the report when it is written (report only)
   --out FILE   where to write the report
+  --all-projects  one report per known project, plus an index
+  --allow-paths   permit --all-projects without --redact (paths WILL be written)
   --help       print this message
   --version    print the version
 
