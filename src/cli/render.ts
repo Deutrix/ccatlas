@@ -20,6 +20,8 @@
  */
 
 import type { DoctorReport, Severity } from '../services/doctor.ts';
+import type { ApplyPlan, ExecutedAction } from '../services/apply.ts';
+import type { UpdatesReport } from '../services/updates.ts';
 import type { Inventory, MergedPlugin } from '../services/inventory.ts';
 import type { StatusResult } from '../services/status.ts';
 
@@ -337,5 +339,158 @@ export function renderFlat(result: StatusResult, options: RenderOptions): string
 
   lines.push(...sectionLines(inventory, options));
   lines.push(...warningLines(inventory, options));
+  return lines.join('\n');
+}
+
+// ---------------------------------------------------------------------------
+// Updates — T2.1-T2.6
+// ---------------------------------------------------------------------------
+
+const DELTA_STYLE: Record<string, Style> = {
+  major: 'red',
+  minor: 'yellow',
+  patch: 'green',
+  same: 'dim',
+  unknown: 'dim',
+};
+
+/**
+ * Renders the updates report.
+ *
+ * **Stale pins come first, above the version table.** They are the finding no
+ * other tool shows, and a plugin whose version string has not moved sorts to
+ * the bottom of any version-ordered list — exactly where the user stops
+ * reading. Burying the differentiator inside a column would waste it.
+ */
+export function renderUpdates(report: UpdatesReport, options: RenderOptions): string {
+  const c = paint(options.color);
+  const lines = [c('ccatlas updates', 'bold')];
+
+  if (report.stalePins.length > 0) {
+    lines.push('', c('Stale pins', 'bold'));
+    lines.push(
+      c('  the version string has not moved, but the source has — /plugin update reports nothing', 'dim'),
+    );
+    for (const record of report.stalePins) {
+      const pin = record.stalePin as { installedSha: string; entrySha: string };
+      lines.push(
+        `  ${c('STALE', 'red')} ${record.id} ${c(`v${record.installedVersion}`, 'dim')}`,
+      );
+      lines.push(
+        `    installed ${c(pin.installedSha.slice(0, 12), 'dim')} → entry pins ${c(pin.entrySha.slice(0, 12), 'yellow')}`,
+      );
+    }
+  }
+
+  if (report.upgrades.length > 0) {
+    lines.push('', c('Available upgrades', 'bold'));
+    for (const record of report.upgrades) {
+      lines.push(
+        `  ${c(record.delta.toUpperCase().padEnd(7), DELTA_STYLE[record.delta] ?? 'dim')} ` +
+          `${record.id} ${record.installedVersion} → ${record.availableVersion ?? '?'}`,
+      );
+    }
+  }
+
+  if (report.entriesBehind.length > 0) {
+    lines.push('', c('Marketplace entry is behind the install', 'bold'));
+    // NOT an upgrade. Rendering these under 'available updates' would tell the
+    // user to move to an older version.
+    for (const record of report.entriesBehind) {
+      lines.push(
+        `  ${record.id}: installed ${record.installedVersion}, entry still declares ${record.availableVersion ?? '?'}`,
+      );
+    }
+  }
+
+  const doubles = report.updates.filter((r) => r.doubleDeclared !== undefined);
+  if (doubles.length > 0) {
+    lines.push('', c('Double declarations', 'bold'));
+    for (const record of doubles) {
+      const d = record.doubleDeclared as { effective: string; masked: string };
+      lines.push(`  ${record.id}: plugin.json ${d.effective} masks marketplace entry ${d.masked}`);
+    }
+  }
+
+  const unresolved = report.updates.filter((r) => r.unresolved !== undefined);
+  if (unresolved.length > 0) {
+    lines.push('', c('No upgrade target', 'bold'));
+    // Stated rather than shown as "up to date" — an absent entry means the
+    // question was not answered, not answered in the affirmative.
+    for (const record of unresolved) {
+      lines.push(`  ${record.id} ${c(record.unresolved ?? '', 'dim')}`);
+    }
+  }
+
+  const stale = report.marketplaces.filter(
+    (m) => !m.autoRefreshed && m.ageDays !== undefined && m.ageDays >= 30,
+  );
+  if (stale.length > 0) {
+    lines.push('', c('Stale marketplaces', 'bold'));
+    for (const market of stale) {
+      lines.push(`  ${market.name} ${c(`last updated ${market.ageDays} days ago`, 'yellow')}`);
+    }
+    lines.push(c('  refresh with: claude plugin marketplace update <name>', 'green'));
+  }
+
+  if (lines.length === 1) lines.push('', c('nothing to report', 'green'));
+  return lines.join('\n');
+}
+
+/**
+ * Renders the apply plan.
+ *
+ * **Every command in full**, per F5's rule: no collapsing behind "12 actions".
+ * A user who cannot read what is about to run cannot refuse it, and the whole
+ * value of a dry run is that it is legible.
+ */
+export function renderPlan(plan: ApplyPlan, options: RenderOptions, willRun: boolean): string {
+  const c = paint(options.color);
+  const lines = [c(willRun ? 'ccatlas updates --apply' : 'ccatlas updates — plan', 'bold')];
+
+  if (plan.actions.length === 0) {
+    lines.push('', c('nothing to run', 'green'));
+  } else {
+    lines.push('', c(`${plan.actions.length} command(s), in order:`, 'bold'));
+    plan.actions.forEach((action, index) => {
+      lines.push(`  ${index + 1}. ${c(`claude ${action.argv.join(' ')}`, 'green')}`);
+      lines.push(`     ${c(action.reason, 'dim')}`);
+    });
+    // Marketplaces before plugins is load-bearing, not tidiness.
+    lines.push(c('  marketplaces are refreshed first; a plugin update pulls from the clone', 'dim'));
+  }
+
+  if (plan.manual.length > 0) {
+    lines.push('', c('No command fixes these', 'bold'));
+    for (const item of plan.manual) {
+      lines.push(`  ${item.subject}`);
+      lines.push(`     ${c(item.reason, 'dim')}`);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+/** Renders what actually ran. */
+export function renderExecuted(
+  executed: readonly ExecutedAction[],
+  ok: boolean,
+  options: RenderOptions,
+): string {
+  const c = paint(options.color);
+  const lines = [];
+
+  for (const step of executed) {
+    const label = step.code === 0 ? c('ok', 'green') : c(`exit ${step.code}`, 'red');
+    lines.push(`  ${label} claude ${step.action.argv.join(' ')}`);
+    if (step.code !== 0 && step.output !== '') lines.push(`     ${c(step.output.split('\n')[0] ?? '', 'dim')}`);
+  }
+
+  if (!ok) {
+    // Fail-fast: the actions depend on each other, so continuing past a failed
+    // marketplace refresh would install from a clone in an unexpected state.
+    lines.push('', c('stopped at the first failure; nothing after it was run', 'red'));
+  }
+
   return lines.join('\n');
 }

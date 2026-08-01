@@ -21,7 +21,7 @@ export const GLOBAL_FLAGS = [
   { flag: '--verbose', help: 'include per-section detail and timings' },
 ] as const;
 
-export const COMMANDS = ['status', 'doctor'] as const;
+export const COMMANDS = ['status', 'doctor', 'updates'] as const;
 export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
@@ -42,6 +42,16 @@ export interface Flags {
   readonly verbose: boolean;
   /** `status --flat`. Renderer selection, not a global. */
   readonly flat: boolean;
+  /**
+   * `updates --check`. Exit nonzero when there is something to act on.
+   *
+   * The ONE place a nonzero exit means findings rather than failure — a cron
+   * job wants `ccatlas updates --check || notify`, and that idiom needs
+   * exactly one command with that meaning.
+   */
+  readonly check: boolean;
+  /** `updates --apply`. Explicit by design; the plan is shown either way. */
+  readonly apply: boolean;
 }
 
 export type Parsed =
@@ -57,6 +67,8 @@ const DEFAULTS: Flags = {
   color: true,
   verbose: false,
   flat: false,
+  check: false,
+  apply: false,
 };
 
 /**
@@ -79,7 +91,15 @@ export function colorDefault(env: Record<string, string | undefined>, isTty: boo
 const isFlagLike = (arg: string): boolean => arg.startsWith('-') && arg !== '-';
 
 const suggest = (unknown: string): string => {
-  const known = [...GLOBAL_FLAGS.map((f) => f.flag), '--flat', '--project', '--help', '--version'];
+  const known = [
+    ...GLOBAL_FLAGS.map((f) => f.flag),
+    '--flat',
+    '--project',
+    '--check',
+    '--apply',
+    '--help',
+    '--version',
+  ];
   // Prefix match only. A fuzzy distance would confidently propose `--json`
   // for `--jsom` and also for `--jason`, and a wrong suggestion costs more
   // than none at all.
@@ -173,6 +193,12 @@ export function parseArgs(
       case '--flat':
         flags.flat = true;
         break;
+      case '--check':
+        flags.check = true;
+        break;
+      case '--apply':
+        flags.apply = true;
+        break;
       default:
         errors.push(`unknown flag "${arg}".${suggest(arg)}`);
     }
@@ -184,6 +210,20 @@ export function parseArgs(
   if (wantsHelp) return command !== undefined ? { kind: 'help', command } : { kind: 'help' };
   if (errors.length > 0) return { kind: 'error', errors };
   if (command === undefined) return { kind: 'help' };
+
+  if (flags.check && flags.apply) {
+    return {
+      kind: 'error',
+      errors: ['--check reports without changing anything; --apply changes things. Pick one.'],
+    };
+  }
+
+  if ((flags.check || flags.apply) && command !== 'updates') {
+    return {
+      kind: 'error',
+      errors: [`--${flags.check ? 'check' : 'apply'} applies to \`updates\`, not \`${command}\``],
+    };
+  }
 
   if (flags.json && flags.flat) {
     return {
@@ -213,11 +253,14 @@ USAGE
 COMMANDS
   status       what is installed, from where, and whether it agrees with itself
   doctor       findings with a severity, a cause, and the exact command to fix it
+  updates      version differences, stale pins, and marketplace staleness
 
 FLAGS
 ${flagHelp}
   --flat       render a flat list instead of a tree (status only)
   --project P  scope to a project directory instead of the global baseline
+  --check      exit 1 when there is something to act on (updates only)
+  --apply      run the plan instead of only printing it (updates only)
   --help       print this message
   --version    print the version
 

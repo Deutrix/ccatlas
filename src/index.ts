@@ -11,10 +11,25 @@ import path from 'node:path';
 import process from 'node:process';
 
 import { colorDefault, helpText, parseArgs } from './cli/args.ts';
-import { renderDoctor, renderFlat, renderTree } from './cli/render.ts';
+import {
+  renderDoctor,
+  renderExecuted,
+  renderFlat,
+  renderPlan,
+  renderTree,
+  renderUpdates,
+} from './cli/render.ts';
 import { envelope } from './json.ts';
 import { doctor } from './services/doctor-run.ts';
 import { status } from './services/status.ts';
+import {
+  applyPlan,
+  checkExitCode,
+  planUpdates,
+  RELOAD_REMINDER,
+} from './services/apply.ts';
+import { STALE_MARKETPLACE_DAYS } from './services/updates.ts';
+import { updates } from './services/updates-run.ts';
 
 const VERSION = __CCATLAS_VERSION__;
 
@@ -82,6 +97,34 @@ export async function run(argv: readonly string[]): Promise<number> {
 
       process.stdout.write(`${renderDoctor(report, renderOptions)}\n`);
       return EXIT_OK;
+    }
+
+    if (parsed.command === 'updates') {
+      const { report } = await updates(serviceOptions);
+
+      if (parsed.flags.apply) {
+        const plan = planUpdates(report, STALE_MARKETPLACE_DAYS);
+        process.stdout.write(`${renderPlan(plan, renderOptions, true)}\n\n`);
+
+        const { executed, ok } = await applyPlan(plan);
+        process.stdout.write(`${renderExecuted(executed, ok, renderOptions)}\n`);
+        if (ok && executed.length > 0) process.stdout.write(`\n${RELOAD_REMINDER}\n`);
+
+        // A failed mutation is a real failure, unlike a finding.
+        return ok ? EXIT_OK : EXIT_ERROR;
+      }
+
+      if (parsed.flags.json) {
+        const payload = envelope(parsed.command, VERSION, report, report.warnings);
+        process.stdout.write(`${JSON.stringify(payload, null, 2)}\n`);
+        return parsed.flags.check ? checkExitCode(report) : EXIT_OK;
+      }
+
+      process.stdout.write(`${renderUpdates(report, renderOptions)}\n`);
+
+      // The one command where nonzero means findings. Reserved deliberately:
+      // status and doctor exit 0 on findings so this idiom stays unambiguous.
+      return parsed.flags.check ? checkExitCode(report) : EXIT_OK;
     }
 
     const result = await status(serviceOptions);

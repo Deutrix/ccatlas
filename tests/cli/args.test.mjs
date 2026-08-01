@@ -28,6 +28,8 @@ test('a bare command parses with every flag defaulted off', () => {
     color: true,
     verbose: false,
     flat: false,
+    check: false,
+    apply: false,
   });
 });
 
@@ -206,4 +208,32 @@ test('--project still parses when it precedes the command', () => {
 test('doctor is a known command', () => {
   assert.equal(run('doctor').kind, 'run');
   assert.equal(run('doctor').command, 'doctor');
+});
+
+// ---------------------------------------------------------------------------
+// --check and --apply
+// ---------------------------------------------------------------------------
+
+test('--check and --apply parse on updates', () => {
+  assert.equal(run('updates', '--check').flags.check, true);
+  assert.equal(run('updates', '--apply').flags.apply, true);
+});
+
+test('--check with --apply is a contradiction, not a precedence', () => {
+  const parsed = run('updates', '--check', '--apply');
+  assert.equal(parsed.kind, 'error');
+  assert.match(parsed.errors[0], /Pick one/);
+});
+
+test('--check and --apply are rejected on commands that do not have them', () => {
+  for (const command of ['status', 'doctor']) {
+    const parsed = parseArgs([command, '--check']);
+    assert.equal(parsed.kind, 'error', command);
+    assert.match(parsed.errors[0], /applies to `updates`/);
+  }
+});
+
+test('updates is a known command', () => {
+  assert.equal(run('updates').kind, 'run');
+  assert.equal(run('updates').command, 'updates');
 });

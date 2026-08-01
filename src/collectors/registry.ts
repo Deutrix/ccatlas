@@ -85,11 +85,31 @@ export interface KnownMarketplaceRecord {
   readonly headSha?: string;
 }
 
+/**
+ * One plugin entry from a marketplace clone's `.claude-plugin/marketplace.json`.
+ *
+ * **This is the upgrade target**, and T0.1's finding is why: `plugin list
+ * --json --available` excludes every installed plugin, so it yields no upgrade
+ * targets at all. The clone's own manifest is what the next `plugin install`
+ * would actually fetch.
+ */
+export interface MarketplaceEntry {
+  readonly marketplace: string;
+  readonly name: string;
+  /** Entry-declared version. Absent on 221 of 276 official entries. */
+  readonly version?: string;
+  /** `source.sha` — the majority pin in the largest marketplace. */
+  readonly sourceSha?: string;
+  readonly source?: PluginSource;
+}
+
 export interface RegistryData {
   /** `installed_plugins.json → version`. 2 as observed; a bump is a warning. */
   readonly registryVersion?: number;
   readonly installed: InstalledPluginRecord[];
   readonly marketplaces: KnownMarketplaceRecord[];
+  /** Entries from every readable marketplace clone. The upgrade targets. */
+  readonly entries: MarketplaceEntry[];
 }
 
 export interface RegistryCollectorOptions {
@@ -290,6 +310,59 @@ export function parseKnownMarketplaces(raw: unknown): {
   return { marketplaces, warnings };
 }
 
+/**
+ * Parses a marketplace clone's manifest into entries.
+ *
+ * `plugins` is an array of objects whose `source` is polymorphic — a bare
+ * string in 55 of 276 official entries, an object in the rest. Only the `sha`
+ * is lifted out here because that is what T2.4 compares against; the rest is
+ * kept whole for T2.2's resolver.
+ *
+ * A `metadata.version` at the top level is deliberately **not** read. It is a
+ * third version-bearing field that tracked the *stale* value in the one
+ * observed divergence, and T2.5's decision was to compare the two that
+ * actually decide what installs.
+ */
+export function parseMarketplaceManifest(
+  marketplace: string,
+  raw: unknown,
+): { entries: MarketplaceEntry[]; warnings: Warning[] } {
+  if (!isRecord(raw) || !Array.isArray(raw['plugins'])) {
+    return {
+      entries: [],
+      warnings: [
+        warn('unsupported-version', 'marketplace.json has no `plugins` array', marketplace),
+      ],
+    };
+  }
+
+  const entries: MarketplaceEntry[] = [];
+  const warnings: Warning[] = [];
+
+  for (const row of raw['plugins'] as unknown[]) {
+    if (!isRecord(row)) continue;
+    const name = str(row['name']);
+    if (name === undefined) {
+      warnings.push(warn('unsupported-version', 'marketplace entry has no name', marketplace));
+      continue;
+    }
+
+    const source = parseMarketplaceSource(row['source']);
+    const version = str(row['version']);
+    const sourceSha = isRecord(row['source']) ? str((row['source'] as Record<string, unknown>)['sha']) : undefined;
+
+    entries.push({
+      marketplace,
+      name,
+      ...(version !== undefined ? { version } : {}),
+      ...(sourceSha !== undefined ? { sourceSha } : {}),
+      ...(source !== undefined ? { source } : {}),
+    });
+  }
+
+  return { entries, warnings };
+}
+
 // ---------------------------------------------------------------------------
 // Clone probe
 // ---------------------------------------------------------------------------
@@ -460,6 +533,34 @@ export function createRegistryCollector(
           );
         }
 
+        // The manifests. Read only when the clones are reachable — in fixture
+        // mode `installLocation` is a redacted `<HOME>\…` string and every
+        // read would be a guaranteed miss.
+        const entries: MarketplaceEntry[] = [];
+        if (at.probe) {
+          for (const market of marketplaces) {
+            if (market.installLocation === undefined) continue;
+            const manifest = await readIfPresent(
+              path.join(market.installLocation, '.claude-plugin', 'marketplace.json'),
+            );
+            if (manifest === undefined) {
+              warnings.push(
+                warn('partial', 'marketplace clone has no readable manifest', market.name),
+              );
+              continue;
+            }
+            try {
+              const parsed = parseMarketplaceManifest(market.name, JSON.parse(manifest) as unknown);
+              entries.push(...parsed.entries);
+              warnings.push(...parsed.warnings);
+            } catch {
+              warnings.push(
+                warn('partial', 'marketplace manifest is not valid JSON', market.name),
+              );
+            }
+          }
+        }
+
         return {
           ok: true,
           data: {
@@ -468,6 +569,7 @@ export function createRegistryCollector(
               : {}),
             installed: installed.installed,
             marketplaces,
+            entries,
           },
           warnings,
           elapsedMs: performance.now() - started,
