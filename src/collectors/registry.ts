@@ -498,9 +498,15 @@ export const registryCollector: Collector<RegistryData> = createRegistryCollecto
  * and must not be asserted.
  */
 export async function enumerateCacheVersions(cacheRoot: string): Promise<
-  Array<{ marketplace: string; plugin: string; version: string; inUseMtimeMs?: number }>
+  Array<{ dir: string; marketplace: string; plugin: string; version: string; inUseMtimeMs?: number }>
 > {
-  const out: Array<{ marketplace: string; plugin: string; version: string; inUseMtimeMs?: number }> = [];
+  const out: Array<{
+    dir: string;
+    marketplace: string;
+    plugin: string;
+    version: string;
+    inUseMtimeMs?: number;
+  }> = [];
 
   const dirs = async (at: string): Promise<string[]> => {
     try {
@@ -515,13 +521,21 @@ export async function enumerateCacheVersions(cacheRoot: string): Promise<
   for (const marketplace of await dirs(cacheRoot)) {
     for (const plugin of await dirs(path.join(cacheRoot, marketplace))) {
       for (const version of await dirs(path.join(cacheRoot, marketplace, plugin))) {
+        const dir = path.join(cacheRoot, marketplace, plugin, version);
+
         let inUseMtimeMs: number | undefined;
         try {
-          inUseMtimeMs = (await stat(path.join(cacheRoot, marketplace, plugin, version, '.in_use'))).mtimeMs;
+          inUseMtimeMs = (await stat(path.join(dir, '.in_use'))).mtimeMs;
         } catch {
           inUseMtimeMs = undefined;
         }
+
+        // The absolute path is returned so callers can compare against
+        // `installPath` directly rather than rebuilding a plugin id out of
+        // path segments — the same refusal `project-path.ts` makes about
+        // decoding `~/.claude/projects/` directory names.
         out.push({
+          dir,
           marketplace,
           plugin,
           version,

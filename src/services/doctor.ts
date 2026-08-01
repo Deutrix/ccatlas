@@ -107,6 +107,17 @@ export interface DoctorReport {
 
 const rank = (severity: Severity): number => SEVERITY_ORDER.indexOf(severity);
 
+/**
+ * Case-folded, forward-slashed, no trailing separator — enough to compare two
+ * spellings of one path on Windows, where `installPath` and a directory walk
+ * can differ in separator and case for the same directory. Deliberately not
+ * `normaliseProjectPath`: that is the *project identity* normaliser with its
+ * own collision-reporting contract, and borrowing it here would tie cache
+ * comparison to a function that exists to answer a different question.
+ */
+const normalisePath = (value: string): string =>
+  value.replace(/\\/gu, '/').replace(/\/+$/u, '').toLowerCase();
+
 /** Sorts most severe first, then by subject so output is stable across runs. */
 export function sortFindings(findings: readonly Finding[]): Finding[] {
   return [...findings].sort(
@@ -287,6 +298,8 @@ export function mcpFindings(inventory: Inventory): Finding[] {
 // ---------------------------------------------------------------------------
 
 export interface CacheVersionDir {
+  /** Absolute path — compared against `installPath`, never re-parsed. */
+  readonly dir: string;
   readonly marketplace: string;
   readonly plugin: string;
   readonly version: string;
@@ -317,14 +330,19 @@ export interface CacheVersionDir {
  */
 export function orphanedCacheFindings(
   dirs: readonly CacheVersionDir[],
-  installedVersions: ReadonlyMap<string, Set<string>>,
+  installedPaths: ReadonlySet<string>,
 ): Finding[] {
   const findings: Finding[] = [];
+  const live = new Set([...installedPaths].map(normalisePath));
 
   for (const dir of dirs) {
-    const key = `${dir.plugin}@${dir.marketplace}`;
-    const live = installedVersions.get(key);
-    if (live !== undefined && live.has(dir.version)) continue;
+    // Compared as a PATH, not as a reconstructed `<plugin>@<marketplace>` key.
+    // Rebuilding an identity out of directory segments is the same mistake
+    // `project-path.ts` refuses to make about `~/.claude/projects/` names: it
+    // happens to hold on this machine, and fails silently the first time a
+    // cache directory and a plugin id disagree. `installPath` is exact and
+    // both layers already carry it.
+    if (live.has(normalisePath(dir.dir))) continue;
 
     const lastUsed =
       dir.inUseMtimeMs !== undefined
@@ -334,7 +352,7 @@ export function orphanedCacheFindings(
     findings.push({
       code: 'orphaned-cache-dir',
       severity: 'info',
-      subject: `${key} ${dir.version}`,
+      subject: `${dir.plugin}@${dir.marketplace} ${dir.version}`,
       message: `a cached version no installed plugin refers to${lastUsed}`,
       cause:
         'left behind by an update or an uninstall; it occupies disk and Claude Code removes ' +
@@ -445,18 +463,19 @@ export const UNIMPLEMENTED_CHECKS: ReadonlyArray<{ check: string; reason: string
 ];
 
 export function buildDoctorReport(inputs: DoctorInputs): DoctorReport {
-  const installedVersions = new Map<string, Set<string>>();
-  for (const plugin of inputs.inventory.plugins) {
-    const existing = installedVersions.get(plugin.id.name);
-    if (existing) existing.add(plugin.version.version);
-    else installedVersions.set(plugin.id.name, new Set([plugin.version.version]));
-  }
+  // The cache directories every installed plugin actually occupies, taken
+  // from `installPath` rather than rebuilt from a name.
+  const installedPaths = new Set(
+    inputs.inventory.plugins
+      .map((plugin) => plugin.installPath)
+      .filter((p): p is string => p !== undefined),
+  );
 
   const findings = sortFindings([
     ...secretFindings(inputs.secretTargets ?? []),
     ...pluginInstallFindings(inputs.inventory, inputs.existingPaths ?? new Set()),
     ...mcpFindings(inputs.inventory),
-    ...orphanedCacheFindings(inputs.cacheDirs ?? [], installedVersions),
+    ...orphanedCacheFindings(inputs.cacheDirs ?? [], installedPaths),
     ...inventoryFindings(inputs.inventory),
   ]);
 

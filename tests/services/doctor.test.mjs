@@ -284,16 +284,17 @@ test('connected and unknown servers produce nothing — the negative case', () =
 // T1.15 — orphaned cache directories
 // ---------------------------------------------------------------------------
 
-const installed = (name, ...versions) => new Map([[name, new Set(versions)]]);
+/** The cache dirs installed plugins occupy — compared as paths, not names. */
+const installedAt = (...dirs) => new Set(dirs);
 
 test('a cache version nothing refers to is an orphan', () => {
   // The live example: superpowers 6.2.0 installed, 6.1.1 left beside it.
   const findings = orphanedCacheFindings(
     [
-      { marketplace: 'claude-plugins-official', plugin: 'superpowers', version: '6.1.1' },
-      { marketplace: 'claude-plugins-official', plugin: 'superpowers', version: '6.2.0' },
+      { dir: '/c/superpowers/6.1.1', marketplace: 'claude-plugins-official', plugin: 'superpowers', version: '6.1.1' },
+      { dir: '/c/superpowers/6.2.0', marketplace: 'claude-plugins-official', plugin: 'superpowers', version: '6.2.0' },
     ],
-    installed('superpowers@claude-plugins-official', '6.2.0'),
+    installedAt('/c/superpowers/6.2.0'),
   );
 
   assert.equal(findings.length, 1);
@@ -303,8 +304,8 @@ test('a cache version nothing refers to is an orphan', () => {
 
 test('the installed version is never reported — the negative case', () => {
   const findings = orphanedCacheFindings(
-    [{ marketplace: 'm', plugin: 'p', version: '1.0.0' }],
-    installed('p@m', '1.0.0'),
+    [{ dir: '/c/p/1.0.0', marketplace: 'm', plugin: 'p', version: '1.0.0' }],
+    installedAt('/c/p/1.0.0'),
   );
 
   assert.deepEqual(findings, []);
@@ -319,10 +320,10 @@ test('.in_use PRESENCE does not veto — only the installed version does', () =>
   // about currency.
   const findings = orphanedCacheFindings(
     [
-      { marketplace: 'official', plugin: 'superpowers', version: '6.1.1', inUseMtimeMs: 1_700_000_000_000 },
-      { marketplace: 'official', plugin: 'superpowers', version: '6.2.0', inUseMtimeMs: 1_800_000_000_000 },
+      { dir: '/c/superpowers/6.1.1', marketplace: 'official', plugin: 'superpowers', version: '6.1.1', inUseMtimeMs: 1_700_000_000_000 },
+      { dir: '/c/superpowers/6.2.0', marketplace: 'official', plugin: 'superpowers', version: '6.2.0', inUseMtimeMs: 1_800_000_000_000 },
     ],
-    installed('superpowers@official', '6.2.0'),
+    installedAt('/c/superpowers/6.2.0'),
   );
 
   assert.equal(findings.length, 1);
@@ -333,8 +334,8 @@ test('.in_use PRESENCE does not veto — only the installed version does', () =>
 
 test('a version never marked in use says so rather than inventing a date', () => {
   const findings = orphanedCacheFindings(
-    [{ marketplace: 'm', plugin: 'p', version: '0.9.0' }],
-    installed('p@m', '1.0.0'),
+    [{ dir: '/c/p/0.9.0', marketplace: 'm', plugin: 'p', version: '0.9.0' }],
+    installedAt('/c/p/1.0.0'),
   );
 
   assert.match(findings[0].message, /never marked in use/);
@@ -342,8 +343,8 @@ test('a version never marked in use says so rather than inventing a date', () =>
 
 test('the 14-day TTL is NOT asserted anywhere in the output', () => {
   const findings = orphanedCacheFindings(
-    [{ marketplace: 'm', plugin: 'p', version: '0.1.0' }],
-    new Map(),
+    [{ dir: '/c/p/0.1.0', marketplace: 'm', plugin: 'p', version: '0.1.0' }],
+    new Set(),
   );
 
   // FORMATS records the TTL as unverified. Promising a date the tool cannot
