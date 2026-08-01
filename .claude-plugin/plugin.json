@@ -1,0 +1,39 @@
+{
+  "name": "ccatlas",
+  "version": "0.5.0",
+  "description": "Inventory, freshness, usage ROI and portability for your Claude Code stack. Finds stale pins that `/plugin update` reports as up to date.",
+  "author": {
+    "name": "Deutrix"
+  },
+  "homepage": "https://github.com/deutrix/ccatlas",
+  "repository": "https://github.com/deutrix/ccatlas",
+  "license": "MIT",
+  "keywords": ["inventory", "plugins", "mcp", "skills", "audit", "context-budget"],
+  "userConfig": {
+    "sync_repo": {
+      "type": "string",
+      "title": "Sync repository",
+      "description": "Git remote for `ccatlas sync`. Leave empty to disable sync.",
+      "default": ""
+    },
+    "sync_token": {
+      "type": "string",
+      "title": "Sync token",
+      "description": "Token for a private sync remote. Stored in the OS keychain, never exported.",
+      "sensitive": true,
+      "default": ""
+    },
+    "drift_notice": {
+      "type": "boolean",
+      "title": "Session-start drift notice",
+      "description": "Print a one-line notice at session start. Reads the cache only; never networks.",
+      "default": false
+    },
+    "autocommit_on_exit": {
+      "type": "boolean",
+      "title": "Auto-commit on session end",
+      "description": "Commit stack changes to the sync repository when a session ends.",
+      "default": false
+    }
+  }
+}

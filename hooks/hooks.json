@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/ccatlas",
+            "args": ["status", "--cached", "--json"],
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  }
+}

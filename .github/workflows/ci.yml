@@ -64,18 +64,17 @@ jobs:
         run: node --input-type=module -e "await import('node:sqlite'); console.log('node:sqlite OK unflagged')"
 
   # Both gates below are required by docs/tasks.md "Global Constraints" and
-  # docs/02-architecture.md §11. Neither can pass yet:
-  #   - there is no .claude-plugin/plugin.json (that is T7.1)
-  #   - ccatlas is not published, so `plugin details` has nothing to measure
-  # They are wired now, non-blocking, so the wiring is reviewed and correct
-  # before it starts gating.
+  # docs/02-architecture.md §11. **Both are now blocking.**
   #
-  # TODO(T7.1): remove `continue-on-error` from the `validate` step once
-  #             .claude-plugin/plugin.json exists.
-  # TODO(T7.6): remove `continue-on-error` from the `details` step and make the
-  #             600-token check fail the build, once ccatlas is installable.
+  # They measure the STAGED package (dist/plugin) rather than the repo root.
+  # The two are the same directory during development, which is convenient and
+  # misleading: `validate . --strict` fails at the root on this repository's
+  # own CLAUDE.md — correctly, since a CLAUDE.md at a plugin root is not loaded
+  # as project context — but that file never ships. Validating the staged copy
+  # tests what users actually install, and catches the opposite mistake too: a
+  # component that only works because of a file the package does not include.
   plugin-gates:
-    name: Claude Code plugin gates (non-blocking until Phase 7)
+    name: Claude Code plugin gates
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -101,34 +100,27 @@ jobs:
             echo "SKIPPED: claude CLI not on runner — plugin gates did not execute."
           fi
 
-      # Gate 1 — manifest, frontmatter and hook validation.
-      - name: claude plugin validate . --strict
+      # Stage the shippable plugin. Everything below measures THIS, not the
+      # working tree — see the note above the job.
+      - name: Stage the plugin package
         if: steps.probe.outputs.available == 'true'
-        continue-on-error: true # TODO(T7.1): make blocking
-        run: claude plugin validate . --strict
+        run: npm run package
 
-      # Gate 2 — context budget. 600 always-on tokens is a hard acceptance
-      # number (docs/tasks.md, T7.6 📏), not a guideline.
-      #
-      # The output format of `plugin details` is still unknown — T0.2 is
-      # discovering whether it is machine-readable or text-only. Until that
-      # verdict lands, this step echoes the raw output and does not attempt to
-      # extract a number: writing a parser against an unobserved shape is
-      # explicitly forbidden by CLAUDE.md.
-      #
-      # TODO(T0.2): replace the echo with a real extraction once the grammar
-      #             (or a --json flag) is documented in docs/FORMATS.md.
-      # TODO(T7.6): exit 1 when always-on tokens exceed MAX_ALWAYS_ON_TOKENS.
-      #
-      # Observed on 2.1.220: `plugin details` accepts `--plugin-dir <path>` to
-      # load a plugin from disk, so this gate can measure the checkout without
-      # waiting on an npm publish once .claude-plugin/plugin.json exists.
-      - name: claude plugin details ccatlas (≤600 always-on tokens)
+      # Gate 1 — manifest, frontmatter and hook validation. BLOCKING.
+      - name: claude plugin validate --strict
         if: steps.probe.outputs.available == 'true'
-        continue-on-error: true # TODO(T7.6): make blocking
-        env:
-          MAX_ALWAYS_ON_TOKENS: '600'
-        run: |
-          echo "Budget ceiling: ${MAX_ALWAYS_ON_TOKENS} always-on tokens"
-          claude plugin details ccatlas
-          echo "NOT YET ENFORCED — see TODO(T0.2) / TODO(T7.6) in this workflow."
+        run: claude plugin validate dist/plugin --strict
+
+      # Gate 2 — 📏 context budget. 600 always-on tokens is a hard acceptance
+      # number (docs/tasks.md, T7.6), not a guideline, and it is the number the
+      # whole product argues for: a tool that tells people what their stack
+      # costs them, costing 2,000 tokens itself, would be the thing it warns
+      # about.
+      #
+      # T0.2's verdict landed — `plugin details` is text-only, and its grammar
+      # plus four traps are documented in docs/FORMATS.md §1. scripts/
+      # token-budget.mjs parses it with the same code the product uses and
+      # exits 1 above the ceiling. BLOCKING.
+      - name: 📏 Always-on token budget (≤600)
+        if: steps.probe.outputs.available == 'true'
+        run: npm run token-budget
