@@ -391,7 +391,7 @@ ${flagHelp}
   --flat       render a flat list instead of a tree (status only)
   --project P  scope to a project directory instead of the global baseline
   --check      exit 1 when there is something to act on (updates only)
-  --apply      run the plan instead of only printing it (updates only)
+  --apply      run the plan instead of only printing it (updates, import)
   --redact     strip paths, repo names and hostname (report only)
   --open       open the report when it is written (report only)
   --out FILE   where to write the report

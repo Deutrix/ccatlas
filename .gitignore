@@ -19,3 +19,9 @@ Thumbs.db
 # build artifact — rebuilt by prepack/pretest
 bin/
 dist/
+
+# Generated reports. These embed the local username, hostname and project
+# paths — never a source artefact, and never something to commit.
+ccatlas-report.html
+*-report.html
+reports/
