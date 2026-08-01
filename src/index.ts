@@ -29,6 +29,7 @@ import {
   RELOAD_REMINDER,
 } from './services/apply.ts';
 import { STALE_MARKETPLACE_DAYS } from './services/updates.ts';
+import { report } from './services/report-run.ts';
 import { updates } from './services/updates-run.ts';
 
 const VERSION = __CCATLAS_VERSION__;
@@ -125,6 +126,30 @@ export async function run(argv: readonly string[]): Promise<number> {
       // The one command where nonzero means findings. Reserved deliberately:
       // status and doctor exit 0 on findings so this idiom stays unambiguous.
       return parsed.flags.check ? checkExitCode(report) : EXIT_OK;
+    }
+
+    if (parsed.command === 'report') {
+      const written = await report({
+        ...serviceOptions,
+        ...(parsed.flags.out !== undefined ? { outFile: parsed.flags.out } : {}),
+        redact: parsed.flags.redact,
+        open: parsed.flags.open,
+        toolVersion: VERSION,
+        projectDir: parsed.flags.project ?? process.cwd(),
+      });
+
+      const kb = (written.bytes / 1024).toFixed(1);
+      process.stdout.write(`wrote ${written.file} — ${kb}KB${written.redacted ? ', redacted' : ''}
+`);
+
+      // 📏 T3.9. Reported rather than enforced at runtime: the user has the
+      // file either way, and a tool that deletes its own output over a size
+      // budget helps nobody. CI is where the number is a gate.
+      if (written.overBudget) {
+        process.stderr.write(`ccatlas: report exceeds the 120KB budget (${kb}KB)
+`);
+      }
+      return EXIT_OK;
     }
 
     const result = await status(serviceOptions);

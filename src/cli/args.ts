@@ -21,7 +21,7 @@ export const GLOBAL_FLAGS = [
   { flag: '--verbose', help: 'include per-section detail and timings' },
 ] as const;
 
-export const COMMANDS = ['status', 'doctor', 'updates'] as const;
+export const COMMANDS = ['status', 'doctor', 'updates', 'report'] as const;
 export type Command = (typeof COMMANDS)[number];
 
 export interface Flags {
@@ -52,6 +52,12 @@ export interface Flags {
   readonly check: boolean;
   /** `updates --apply`. Explicit by design; the plan is shown either way. */
   readonly apply: boolean;
+  /** `report --redact`. Strips paths, repo names and the hostname. 🔒 */
+  readonly redact: boolean;
+  /** `report --open`. */
+  readonly open: boolean;
+  /** `report --out <file>`. */
+  readonly out?: string;
 }
 
 export type Parsed =
@@ -69,6 +75,8 @@ const DEFAULTS: Flags = {
   flat: false,
   check: false,
   apply: false,
+  redact: false,
+  open: false,
 };
 
 /**
@@ -97,6 +105,9 @@ const suggest = (unknown: string): string => {
     '--project',
     '--check',
     '--apply',
+    '--redact',
+    '--open',
+    '--out',
     '--help',
     '--version',
   ];
@@ -137,6 +148,18 @@ export function parseArgs(
     // The only value-taking flag. Handled before the switch so the value is
     // never mistaken for a positional — `--project .` would otherwise be
     // reported as an unknown command.
+    if (arg === '--out' || arg.startsWith('--out=')) {
+      const inline = arg.startsWith('--out=') ? arg.slice('--out='.length) : undefined;
+      const value = inline ?? args[index + 1];
+      if (inline === undefined) index += 1;
+      if (value === undefined || value === '' || isFlagLike(value)) {
+        errors.push('--out needs a file path');
+        continue;
+      }
+      flags.out = value;
+      continue;
+    }
+
     if (arg === '--project' || arg.startsWith('--project=')) {
       const inline = arg.startsWith('--project=') ? arg.slice('--project='.length) : undefined;
       const value = inline ?? args[index + 1];
@@ -199,6 +222,12 @@ export function parseArgs(
       case '--apply':
         flags.apply = true;
         break;
+      case '--redact':
+        flags.redact = true;
+        break;
+      case '--open':
+        flags.open = true;
+        break;
       default:
         errors.push(`unknown flag "${arg}".${suggest(arg)}`);
     }
@@ -254,6 +283,7 @@ COMMANDS
   status       what is installed, from where, and whether it agrees with itself
   doctor       findings with a severity, a cause, and the exact command to fix it
   updates      version differences, stale pins, and marketplace staleness
+  report       a self-contained HTML report you can send to someone
 
 FLAGS
 ${flagHelp}
@@ -261,6 +291,9 @@ ${flagHelp}
   --project P  scope to a project directory instead of the global baseline
   --check      exit 1 when there is something to act on (updates only)
   --apply      run the plan instead of only printing it (updates only)
+  --redact     strip paths, repo names and hostname (report only)
+  --open       open the report when it is written (report only)
+  --out FILE   where to write the report
   --help       print this message
   --version    print the version
 

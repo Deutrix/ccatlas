@@ -30,6 +30,8 @@ test('a bare command parses with every flag defaulted off', () => {
     flat: false,
     check: false,
     apply: false,
+    redact: false,
+    open: false,
   });
 });
 
